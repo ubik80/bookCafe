@@ -81,3 +81,15 @@
 2024-10-27 21:48:49.763 +07 [10898] LOG:  Datenbanksystem ist bereit, um Verbindungen anzunehmen
 2024-10-27 21:53:50.361 +07 [10899] LOG:  Checkpoint beginnt: time
 2024-10-27 21:53:50.482 +07 [10899] LOG:  Checkpoint komplett: 4 Puffer geschrieben (0.0%); 0 WAL-Datei(en) hinzugefügt, 0 entfernt, 0 wiederverwendet; Schreiben=0,108 s, Sync=0,004 s, gesamt=0,131 s; sync. Dateien=3, längste=0,002 s, Durchschnitt=0.002 s; Entfernung=0 kB, Schätzung=0 kB; LSN=0/19D9178, Redo-LSN=0/19D9140
+2024-10-27 22:21:09.633 +07 [11916] LOG:  PostgreSQL 16.4 (Homebrew) on x86_64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.30), 64-bit startet
+2024-10-27 22:21:09.639 +07 [11916] LOG:  erwarte Verbindungen auf IPv6-Adresse »::1«, Port 5432
+2024-10-27 22:21:09.639 +07 [11916] LOG:  erwarte Verbindungen auf IPv4-Adresse »127.0.0.1«, Port 5432
+2024-10-27 22:21:09.642 +07 [11916] LOG:  erwarte Verbindungen auf Unix-Socket »/tmp/.s.PGSQL.5432«
+2024-10-27 22:21:09.654 +07 [11919] LOG:  Datenbanksystem wurde unterbrochen; letzte bekannte Aktion am 2024-10-27 21:53:50 +07
+2024-10-27 22:21:10.190 +07 [11919] LOG:  Datenbanksystem wurde nicht richtig heruntergefahren; automatische Wiederherstellung läuft
+2024-10-27 22:21:10.202 +07 [11919] LOG:  Redo beginnt bei 0/19D9140
+2024-10-27 22:21:10.203 +07 [11919] LOG:  ungültige Datensatzlänge bei 0/19D9228: mindestens 24 erwartet, 0 erhalten
+2024-10-27 22:21:10.205 +07 [11919] LOG:  Redo fertig bei 0/19D91F0 Systembenutzung: CPU: Benutzer: 0,00 s, System: 0,00 s, verstrichen: 0,00 s
+2024-10-27 22:21:10.217 +07 [11917] LOG:  Checkpoint beginnt: end-of-recovery immediate wait
+2024-10-27 22:21:10.228 +07 [11917] LOG:  Checkpoint komplett: 3 Puffer geschrieben (0.0%); 0 WAL-Datei(en) hinzugefügt, 0 entfernt, 0 wiederverwendet; Schreiben=0,003 s, Sync=0,002 s, gesamt=0,014 s; sync. Dateien=2, längste=0,001 s, Durchschnitt=0.001 s; Entfernung=0 kB, Schätzung=0 kB; LSN=0/19D9228, Redo-LSN=0/19D9228
+2024-10-27 22:21:10.233 +07 [11916] LOG:  Datenbanksystem ist bereit, um Verbindungen anzunehmen
