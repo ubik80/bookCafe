@@ -164,5 +164,7 @@ cython_debug/
 logdatei
 db/*
 db/
+instance/*
+instance/
 .idea/
 .idea/*
