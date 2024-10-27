@@ -73,3 +73,11 @@
 2024-10-27 20:58:53.915 +07 [94042] LOG:  Checkpoint beginnt: shutdown immediate
 2024-10-27 20:58:53.926 +07 [94042] LOG:  Checkpoint komplett: 0 Puffer geschrieben (0.0%); 0 WAL-Datei(en) hinzugefügt, 0 entfernt, 0 wiederverwendet; Schreiben=0,003 s, Sync=0,001 s, gesamt=0,012 s; sync. Dateien=0, längste=0,000 s, Durchschnitt=0.000 s; Entfernung=0 kB, Schätzung=821 kB; LSN=0/19D9090, Redo-LSN=0/19D9090
 2024-10-27 20:58:53.936 +07 [94041] LOG:  Datenbanksystem ist heruntergefahren
+2024-10-27 21:48:49.713 +07 [10898] LOG:  PostgreSQL 16.4 (Homebrew) on x86_64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.30), 64-bit startet
+2024-10-27 21:48:49.721 +07 [10898] LOG:  erwarte Verbindungen auf IPv6-Adresse »::1«, Port 5432
+2024-10-27 21:48:49.721 +07 [10898] LOG:  erwarte Verbindungen auf IPv4-Adresse »127.0.0.1«, Port 5432
+2024-10-27 21:48:49.724 +07 [10898] LOG:  erwarte Verbindungen auf Unix-Socket »/tmp/.s.PGSQL.5432«
+2024-10-27 21:48:49.748 +07 [10901] LOG:  Datenbanksystem wurde am 2024-10-27 20:58:53 +07 heruntergefahren
+2024-10-27 21:48:49.763 +07 [10898] LOG:  Datenbanksystem ist bereit, um Verbindungen anzunehmen
+2024-10-27 21:53:50.361 +07 [10899] LOG:  Checkpoint beginnt: time
+2024-10-27 21:53:50.482 +07 [10899] LOG:  Checkpoint komplett: 4 Puffer geschrieben (0.0%); 0 WAL-Datei(en) hinzugefügt, 0 entfernt, 0 wiederverwendet; Schreiben=0,108 s, Sync=0,004 s, gesamt=0,131 s; sync. Dateien=3, längste=0,002 s, Durchschnitt=0.002 s; Entfernung=0 kB, Schätzung=0 kB; LSN=0/19D9178, Redo-LSN=0/19D9140

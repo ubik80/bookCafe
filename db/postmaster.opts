@@ -1,1 +1,1 @@
-/usr/local/Cellar/postgresql@16/16.4_2/bin/postgres "-D" "/Users/tillspaeth/PycharmProjects/pythonProject/db"
+/usr/local/Cellar/postgresql@16/16.4_2/bin/postgres "-D" "/Users/tillspaeth/PycharmProjects/bookCafe/db"
