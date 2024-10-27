@@ -27,12 +27,16 @@
     </div>
 
     <div class="col-1"></div>
-    <div class="col-4">
+    <div class="col-5">
         {% for book in books %}
         <div class="card">
-            <div class="card-header">{{book['title']}} by {{book['author']}}</div>
-<!--            <div class="card-body">Content</div>-->
-            <div class="card-footer"><a href="#">more ...</a></div>
+            <div class="card-header">{{book['title']}} &nbsp;&nbsp;&nbsp; by &nbsp;&nbsp;&nbsp; {{book['author']}}</div>
+            <div class="card-body">{{book['description']}}</div>
+            <div class="card-footer">
+                <a href="#">open</a>
+                <a href="#">edit</a>
+                <a href="/delete_book/{{book['book_id']}}">delete</a>
+            </div>
         </div>
         {% endfor %}
     </div>

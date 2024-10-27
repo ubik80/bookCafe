@@ -101,9 +101,18 @@ def find_book():
         books = (Book.query.
                  filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
                  .all())
-        books = [{'title':b.title, 'author':b.author} for b in books]
+        books = [{'title':b.title, 'author':b.author, 'description':b.description[:100], 'book_id':b.id} for b in books]
         return render_template("find_book.html", author=author, title=title, books=books)
     return render_template("find_book.html")
+
+
+@app.route("/delete_book/<id>", methods=["GET", "POST"])
+@login_required
+def delete_book(id):
+    Book.query.filter_by(id=id).delete()
+    db.session.commit()
+    flash("Book deleted from library.")
+    return redirect(url_for("find_book"))
 
 
 if __name__ == "__main__":
