@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
@@ -98,12 +98,21 @@ def find_book():
     if request.method == "POST":
         title = request.form.get("title")
         author = request.form.get("author")
-        books = (Book.query.
-                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-                 .all())
-        books = [{'title':b.title, 'author':b.author, 'description':b.description[:100], 'book_id':b.id} for b in books]
-        return render_template("find_book.html", author=author, title=title, books=books)
-    return render_template("find_book.html")
+        session['title'] = title
+        session['author'] = author
+        return redirect(url_for("find_book"))
+    title = session["title"] or ""
+    author = session["author"] or ""
+    books = query_books(author, title)
+    return render_template("find_book.html", author=author, title=title, books=books)
+
+
+def query_books(author, title):
+    books = (Book.query.
+             filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+             .all())
+    books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]
+    return books
 
 
 @app.route("/delete_book/<id>", methods=["GET", "POST"])
