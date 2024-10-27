@@ -99,15 +99,11 @@ def find_book():
         title = request.form.get("title")
         author = request.form.get("author")
         books = (Book.query.
-                 filter(Book.title.like(f'%{title}%'))
-                 .filter(Book.author.like(f'%{author}%'))
+                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
                  .all())
-        books = [{title:b.title, author:b.author} for b in books]
+        books = [{'title':b.title, 'author':b.author} for b in books]
         return render_template("find_book.html", author=author, title=title, books=books)
-    title = request.args.get('title') or ""
-    author = request.args.get('author') or ""
-    books = request.args.get('books') or []
-    return render_template("find_book.html", author=author, title=title, books=books)
+    return render_template("find_book.html")
 
 
 if __name__ == "__main__":
