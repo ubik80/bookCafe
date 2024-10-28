@@ -168,3 +168,5 @@ instance/*
 instance/
 .idea/
 .idea/*
+migrations/*
+migrations/
