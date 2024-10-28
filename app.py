@@ -58,7 +58,7 @@ def register():
 def login():
     if request.method == "POST":
         user = User.query.filter_by(username=request.form.get("username")).first()
-        if user.password == request.form.get("password"):
+        if user and user.password == request.form.get("password"):
             login_user(user)
             flash("You are logged in.")
             return redirect(url_for("home"))
@@ -66,6 +66,7 @@ def login():
 
 
 @app.route("/logout")
+@login_required
 def logout():
     logout_user()
     flash("You are logged out.")
@@ -101,8 +102,8 @@ def find_book():
         session['title'] = title
         session['author'] = author
         return redirect(url_for("find_book"))
-    title = session["title"] or ""
-    author = session["author"] or ""
+    title = session.get("title") or ""
+    author = session.get("author") or ""
     books = query_books(author, title)
     return render_template("find_book.html", author=author, title=title, books=books)
 
