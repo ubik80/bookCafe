@@ -1,2 +1,4 @@
-pg_ctl -D /Users/tillspaeth/PycharmProjects/bookCafe/db -l logdatei start
 flask run --debug
+flask db init
+flask db migrate -m "initial"
+flask db upgrade

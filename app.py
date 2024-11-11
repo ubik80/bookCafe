@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, backref
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from flask_migrate import Migrate
 from flask_toastr import Toastr
+from datetime import datetime
 
 
 class Base(DeclarativeBase):
@@ -30,6 +31,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(12), unique=True, nullable=False)
     password = db.Column(db.String(25), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+    books = db.relationship('Book', backref='user',)
 
 
 class Book(db.Model):
@@ -37,6 +40,8 @@ class Book(db.Model):
     title = db.Column(db.String(50), nullable=False)
     author = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(500), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+    user_created = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 @login_manager.user_loader

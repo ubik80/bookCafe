@@ -20,7 +20,19 @@
                 <input type="text" class="form-control" id="author" placeholder="Enter author name" name="author"
                        value="{{author}}">
             </div>
+
+            <label class="form-label">Sort by: </label><br>
+            <div class="form-check form-check-inline">
+              <input type="radio" class="form-check-input" id="title_radio" name="optradio" value="title" checked>title
+              <label class="form-check-label" for="title_radio"></label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input type="radio" class="form-check-input" id="author_radio" name="optradio" value="author">author
+              <label class="form-check-label" for="author_radio"></label>
+            </div>
+
             <div class="mb-3">
+                <br>
                 <button type="submit" class="btn btn-primary">Submit</button>
             </div>
         </form>
