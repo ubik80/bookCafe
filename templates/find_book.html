@@ -23,12 +23,12 @@
 
             <label class="form-label">Sort by: </label><br>
             <div class="form-check form-check-inline">
-              <input type="radio" class="form-check-input" id="title_radio" name="optradio" value="title" checked>title
-              <label class="form-check-label" for="title_radio"></label>
+                <input type="radio" class="form-check-input" id="title_radio" name="sort_by" value="title" {{"checked" if sort_by != "author" }}>title</input>
+                <label class="form-check-label" for="title_radio"></label>
             </div>
             <div class="form-check form-check-inline">
-              <input type="radio" class="form-check-input" id="author_radio" name="optradio" value="author">author
-              <label class="form-check-label" for="author_radio"></label>
+                <input type="radio" class="form-check-input" id="author_radio" name="sort_by" value="author" {{"checked" if sort_by == "author" }}>author</input>
+                <label class="form-check-label" for="author_radio"></label>
             </div>
 
             <div class="mb-3">

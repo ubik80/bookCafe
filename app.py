@@ -22,7 +22,6 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 toastr = Toastr(app)
 
-
 with app.app_context():
     db.create_all()
 
@@ -32,7 +31,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(12), unique=True, nullable=False)
     password = db.Column(db.String(25), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
-    books = db.relationship('Book', backref='user',)
+    books = db.relationship('Book', backref='user', )
 
 
 class Book(db.Model):
@@ -104,19 +103,29 @@ def find_book():
     if request.method == "POST":
         title = request.form.get("title")
         author = request.form.get("author")
-        session['title'] = title
-        session['author'] = author
+        sort_by = request.form.get("sort_by")
+        session['title'] = title or ""
+        session['author'] = author or ""
+        session['sort_by'] = sort_by or "title"
         return redirect(url_for("find_book"))
     title = session.get("title") or ""
     author = session.get("author") or ""
-    books = query_books(author, title)
-    return render_template("find_book.html", author=author, title=title, books=books)
+    sort_by = session.get("sort_by") or "title"
+    books = query_books(author, title, sort_by)
+    return render_template("find_book.html", author=author, title=title, sort_by=sort_by, books=books)
 
 
-def query_books(author, title):
-    books = (Book.query.
-             filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-             .all())
+def query_books(author, title, sort_by):
+    if sort_by == "author":
+        books = (Book.query.
+                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                 .order_by(Book.author.asc())
+                 .all())
+    else:
+        books = (Book.query.
+                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                 .order_by(Book.title.asc())
+                 .all())
     books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]
     return books
 
