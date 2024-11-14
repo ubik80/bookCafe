@@ -5,6 +5,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from flask_migrate import Migrate
 from flask_toastr import Toastr
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Base(DeclarativeBase):
@@ -28,19 +29,26 @@ with app.app_context():
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(12), unique=True, nullable=False)
-    password = db.Column(db.String(25), nullable=False)
+    username = db.Column(db.String(12), unique=True, index=True, nullable=False)
+    password = db.Column(db.String(164), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     books = db.relationship('Book', backref='user', )
+
+    def set_password(self, p):
+        self.password = generate_password_hash(p)
+
+    def check_password(self, p):
+        return check_password_hash(self.password, p)
 
 
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(50), nullable=False)
-    author = db.Column(db.String(50), nullable=False)
+    title = db.Column(db.String(50), index=True, nullable=False)
+    author = db.Column(db.String(50), index=True, nullable=False)
     description = db.Column(db.String(500), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     user_created = db.Column(db.Integer, db.ForeignKey('user.id'))
+    __table_args__ = (db.Index('title_author_index', 'title', 'author'),)
 
 
 @login_manager.user_loader
@@ -51,7 +59,8 @@ def loader_user(user_id):
 @app.route('/register', methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        user = User(username=request.form.get("username"), password=request.form.get("password"))
+        user = User(username=request.form.get("username"))
+        user.set_password(request.form.get("password"))
         db.session.add(user)
         db.session.commit()
         return redirect(url_for("login"))
@@ -62,7 +71,7 @@ def register():
 def login():
     if request.method == "POST":
         user = User.query.filter_by(username=request.form.get("username")).first()
-        if user and user.password == request.form.get("password"):
+        if user and user.check_password(request.form.get("password")):
             login_user(user)
             flash("You are logged in.")
             return redirect(url_for("home"))
