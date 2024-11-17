@@ -1,0 +1,8 @@
+alembic==1.14.0
+Flask==3.1.0
+flask_login==0.6.3
+flask_migrate==4.0.7
+flask_sqlalchemy==3.1.1
+flask_toastr==0.5.8
+SQLAlchemy==2.0.36
+Werkzeug==3.1.3
