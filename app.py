@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_login import LoginManager, login_user, logout_user, login_required
+from flask_login import LoginManager, login_user, logout_user, login_required, user_logged_in
 from flask_migrate import Migrate
 from flask_toastr import Toastr
-from book_cafe.db_models import db, User, Book, create_roles
+from flask import g
+from book_cafe.db_models import db, Role, Role_User, User, Book, initialize_database
 
 
 app = Flask(__name__)
@@ -25,9 +26,10 @@ def loader_user(user_id):
 @app.route('/register', methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        user = User(username=request.form.get("username"))
-        user.set_password(request.form.get("password"))
-        db.session.add(user)
+        user_role = Role.query.filter(Role.role_name == "User").first()
+        new_user = User.add_new(username=request.form.get("username"), password=request.form.get("password"))
+        db.session.commit()
+        Role_User.add_new(role_id = user_role.id, user_id = new_user.id)
         db.session.commit()
         return redirect(url_for("login"))
     return render_template("sign_up.html")
@@ -39,6 +41,7 @@ def login():
         user = User.query.filter_by(username=request.form.get("username")).first()
         if user and user.check_password(request.form.get("password")):
             login_user(user)
+            g.user_id = user.id
             flash("You are logged in.")
             return redirect(url_for("home"))
     return render_template("login.html")
@@ -62,11 +65,7 @@ def home():
 #@roles_required('Admin')
 def add_book():
     if request.method == "POST":
-        book = Book(
-            title=request.form.get("title"),
-            author=request.form.get("author"),
-            description=request.form.get("description"))
-        db.session.add(book)
+        Book.add_new(title=request.form.get("title"), author=request.form.get("author"), description=request.form.get("description"), user_id=g.user_id)
         db.session.commit()
         flash("Book added to library.")
         return redirect(url_for("add_book"))
@@ -116,4 +115,7 @@ def delete_book(id):
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        initialize_database()
     app.run(debug=True)
