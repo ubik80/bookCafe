@@ -2,21 +2,19 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_migrate import Migrate
 from flask_toastr import Toastr
-from book_cafe.db_models import db, User, Book
+from book_cafe.db_models import db, User, Book, create_roles
 
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///bookcafe"
 app.config["SECRET_KEY"] = "abc"
+app.config['SECURITY_REGISTERABLE'] = True
 db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 toastr = Toastr(app)
-
-with app.app_context():
-    db.create_all()
 
 
 @login_manager.user_loader
@@ -61,6 +59,7 @@ def home():
 
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
+#@roles_required('Admin')
 def add_book():
     if request.method == "POST":
         book = Book(
