@@ -16,7 +16,7 @@ class Role_User(db.Model):
     __tablename__ = 'role_user'
     id = db.Column(db.Integer(), primary_key=True)
     role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
-    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'))
+    user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'), index=True)
 
     @staticmethod
     def add_new(role_id, user_id):
