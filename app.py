@@ -1,21 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, backref
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_migrate import Migrate
 from flask_toastr import Toastr
-from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-
-
-class Base(DeclarativeBase):
-    pass
+from book_cafe.db_models import db, User, Book
 
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///bookcafe"
 app.config["SECRET_KEY"] = "abc"
-db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager()
@@ -25,30 +17,6 @@ toastr = Toastr(app)
 
 with app.app_context():
     db.create_all()
-
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(12), unique=True, index=True, nullable=False)
-    password = db.Column(db.String(164), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
-    books = db.relationship('Book', backref='user', )
-
-    def set_password(self, p):
-        self.password = generate_password_hash(p)
-
-    def check_password(self, p):
-        return check_password_hash(self.password, p)
-
-
-class Book(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(50), index=True, nullable=False)
-    author = db.Column(db.String(50), index=True, nullable=False)
-    description = db.Column(db.String(500), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
-    user_created = db.Column(db.Integer, db.ForeignKey('user.id'))
-    __table_args__ = (db.Index('title_author_index', 'title', 'author'),)
 
 
 @login_manager.user_loader

@@ -166,6 +166,8 @@ db/*
 db/
 instance/*
 instance/
+migrations/*
+migrations/
 .idea/
 .idea/*
 .DS_Store/*
