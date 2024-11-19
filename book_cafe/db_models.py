@@ -37,6 +37,11 @@ class Role(db.Model, RoleMixin):
         db.session.add(new_role)
         return new_role
 
+    @staticmethod
+    def get_role(role_name):
+        role = Role.query.filter(Role.role_name == role_name).first()
+        return role
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -44,7 +49,9 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(12), unique=True, index=True, nullable=False)
     password = db.Column(db.String(164), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
-    active = db.Column(db.Boolean())
+    is_active = db.Column(db.Boolean, default = True, nullable=False)
+    is_authenticated = db.Column(db.Boolean, default = True, nullable=False)
+    is_anonymous = db.Column(db.Boolean, default = False, nullable=False)
     books = db.relationship('Book', backref='book',)
     roles = db.relationship('Role_User', backref='role',)
 
@@ -55,11 +62,24 @@ class User(UserMixin, db.Model):
         db.session.add(new_user)
         return new_user
 
+    @staticmethod
+    def get_user_by_name(username):
+        user = User.query.filter(User.username==username).first()
+        return user
+
+    @staticmethod
+    def get_user_by_id(user_id):
+        user = User.query.filter(User.id==user_id).first()
+        return user
+
     def set_password(self, p):
         self.password = generate_password_hash(p)
 
     def check_password(self, p):
         return check_password_hash(self.password, p)
+
+    def get_id(self):
+        return str(self.id)
 
 
 class Book(db.Model):
@@ -77,6 +97,25 @@ class Book(db.Model):
         new_book = Book(title=title, author=author, description=description, user_id=user_id)
         db.session.add(new_book)
         return new_book
+
+    @staticmethod
+    def get_book_by_id(book_id):
+        book= Book.query.filter_by(id=id)
+        return book
+
+    @staticmethod
+    def get_books_by_author_title(author, title, sort_by):
+        if sort_by == "author":
+            books = (Book.query.
+                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                 .order_by(Book.author.asc())
+                 .all())
+        else:
+            books = (Book.query.
+                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                 .order_by(Book.title.asc())
+                 .all())
+        return books
 
 
 def initialize_database():

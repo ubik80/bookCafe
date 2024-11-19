@@ -1,32 +1,30 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_login import LoginManager, login_user, logout_user, login_required, user_logged_in
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
-from flask import g
 from book_cafe.db_models import db, Role, Role_User, User, Book, initialize_database
 
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///bookcafe"
 app.config["SECRET_KEY"] = "abc"
-app.config['SECURITY_REGISTERABLE'] = True
 db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager()
-login_manager.init_app(app)
 login_manager.login_view = "login"
+login_manager.init_app(app)
 toastr = Toastr(app)
 
 
 @login_manager.user_loader
-def loader_user(user_id):
-    return User.query.get(user_id)
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        user_role = Role.query.filter(Role.role_name == "User").first()
+        user_role = Role.get_role("User")
         new_user = User.add_new(username=request.form.get("username"), password=request.form.get("password"))
         db.session.commit()
         Role_User.add_new(role_id = user_role.id, user_id = new_user.id)
@@ -38,10 +36,9 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        user = User.query.filter_by(username=request.form.get("username")).first()
+        user = User.get_user_by_name(username=request.form.get("username"))
         if user and user.check_password(request.form.get("password")):
             login_user(user)
-            g.user_id = user.id
             flash("You are logged in.")
             return redirect(url_for("home"))
     return render_template("login.html")
@@ -62,10 +59,13 @@ def home():
 
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
-#@roles_required('Admin')
 def add_book():
     if request.method == "POST":
-        Book.add_new(title=request.form.get("title"), author=request.form.get("author"), description=request.form.get("description"), user_id=g.user_id)
+        Book.add_new(
+            title=request.form.get("title"),
+            author=request.form.get("author"),
+            description=request.form.get("description"),
+            user_id=current_user.user_id)
         db.session.commit()
         flash("Book added to library.")
         return redirect(url_for("add_book"))
@@ -91,16 +91,7 @@ def find_book():
 
 
 def query_books(author, title, sort_by):
-    if sort_by == "author":
-        books = (Book.query.
-                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-                 .order_by(Book.author.asc())
-                 .all())
-    else:
-        books = (Book.query.
-                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-                 .order_by(Book.title.asc())
-                 .all())
+    books = Book.get_books_by_author_title(author=author, title=title, sort_by=sort_by)
     books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]
     return books
 
@@ -108,7 +99,7 @@ def query_books(author, title, sort_by):
 @app.route("/delete_book/<id>", methods=["GET", "POST"])
 @login_required
 def delete_book(id):
-    Book.query.filter_by(id=id).delete()
+    Book.get_book_by_id(id).delete()
     db.session.commit()
     flash("Book deleted from library.")
     return redirect(url_for("find_book"))
