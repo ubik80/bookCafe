@@ -3,7 +3,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_migrate import Migrate
 from flask_toastr import Toastr
 from functools import wraps
-from book_cafe.db_models import db, Role, Role_User, User, Book, initialize_database
+from book_cafe.db_models import db, Role, Role_User, User, Book
 
 
 app = Flask(__name__)
@@ -118,6 +118,20 @@ def query_books(author, title, sort_by):
     books = Book.get_books_by_author_title(author=author, title=title, sort_by=sort_by)
     books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]
     return books
+
+
+def initialize_database():
+    if not Role.query.filter(Role.name == 'Admin').first():
+        Role.add_new(role_name='Admin')
+    if not Role.query.filter(Role.name == 'User').first():
+        Role.add_new(role_name='User')
+    admin_user = User.query.filter(User.username == 'Admin').first()
+    if admin_user:
+        admin_role = Role.query.filter(Role.name == "Admin").first()
+        role_user_admin = Role_User.query.filter((Role_User.user_id == admin_user.id) & (Role_User.role_id == admin_role.id)).first()
+        if not role_user_admin:
+            Role_User.add_new(role_id=admin_role.id, user_id=admin_user.id)
+    db.session.commit()
 
 
 if __name__ == "__main__":

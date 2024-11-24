@@ -127,19 +127,5 @@ class Book(db.Model):
         db.session.delete(self)
 
 
-def initialize_database():
-    if not Role.query.filter(Role.name == 'Admin').first():
-        Role.add_new(role_name='Admin')
-    if not Role.query.filter(Role.name == 'User').first():
-        Role.add_new(role_name='User')
-    admin_user = User.query.filter(User.username == 'Admin').first()
-    if admin_user:
-        admin_role = Role.query.filter(Role.name == "Admin").first()
-        role_user_admin = Role_User.query.filter((Role_User.user_id == admin_user.id) & (Role_User.role_id == admin_role.id)).first()
-        if not role_user_admin:
-            Role_User.add_new(role_id=admin_role.id, user_id=admin_user.id)
-    db.session.commit()
-
-
 if __name__ == "__main__":
     pass
