@@ -2,7 +2,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
-
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -101,13 +100,13 @@ class Book(db.Model):
 
     @staticmethod
     def add_new(title, author, description, user_id):
-        new_book = Book(title=title, author=author, description=description, user_id=user_id)
+        new_book = Book(title=title, author=author, description=description, user_created=user_id)
         db.session.add(new_book)
         return new_book
 
     @staticmethod
     def get_book_by_id(book_id):
-        book= Book.query.filter_by(id=id)
+        book=(Book.query.filter(Book.id==book_id)).one()
         return book
 
     @staticmethod
@@ -123,6 +122,9 @@ class Book(db.Model):
                  .order_by(Book.title.asc())
                  .all())
         return books
+
+    def delete(self):
+        db.session.delete(self)
 
 
 def initialize_database():

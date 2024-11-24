@@ -78,7 +78,7 @@ def add_book():
             title=request.form.get("title"),
             author=request.form.get("author"),
             description=request.form.get("description"),
-            user_id=current_user.user_id)
+            user_id=current_user.id)
         db.session.commit()
         flash("Book added to library.")
         return redirect(url_for("add_book"))
@@ -89,7 +89,8 @@ def add_book():
 @login_required
 @role_required("Admin")
 def delete_book(id):
-    Book.get_book_by_id(id).delete()
+    book = Book.get_book_by_id(id)
+    book.delete()
     db.session.commit()
     flash("Book deleted from library.")
     return redirect(url_for("find_book"))
