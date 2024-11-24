@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
 from flask_security import UserMixin, RoleMixin
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import relationship
+
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -17,6 +19,8 @@ class Role_User(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     role_id = db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
     user_id = db.Column('user_id', db.Integer(), db.ForeignKey('user.id'), index=True)
+    user = relationship("User", back_populates="role_ids")
+    role = relationship("Role")
 
     @staticmethod
     def add_new(role_id, user_id):
@@ -28,18 +32,17 @@ class Role_User(db.Model):
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
     id = db.Column(db.Integer(), primary_key=True)
-    role_name = db.Column(db.String(80), unique=True)
-    role_user = db.relationship('Role_User', backref='role_user',)
+    name = db.Column(db.String(80), unique=True)
 
     @staticmethod
     def add_new(role_name):
-        new_role = Role(role_name=role_name)
+        new_role = Role(name=role_name)
         db.session.add(new_role)
         return new_role
 
     @staticmethod
     def get_role(role_name):
-        role = Role.query.filter(Role.role_name == role_name).first()
+        role = Role.query.filter(Role.name == role_name).first()
         return role
 
 
@@ -52,8 +55,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default = True, nullable=False)
     is_authenticated = db.Column(db.Boolean, default = True, nullable=False)
     is_anonymous = db.Column(db.Boolean, default = False, nullable=False)
-    books = db.relationship('Book', backref='book',)
-    roles = db.relationship('Role_User', backref='role',)
+    role_ids = relationship("Role_User", back_populates="user")
 
     @staticmethod
     def add_new(username, password):
@@ -80,6 +82,11 @@ class User(UserMixin, db.Model):
 
     def get_id(self):
         return str(self.id)
+
+    def has_role(self, required_role):
+        roles = [rid.role.name for rid in self.role_ids]
+        if required_role in roles: return True
+        return False
 
 
 class Book(db.Model):
@@ -119,13 +126,13 @@ class Book(db.Model):
 
 
 def initialize_database():
-    if not Role.query.filter(Role.role_name == 'Admin').first():
+    if not Role.query.filter(Role.name == 'Admin').first():
         Role.add_new(role_name='Admin')
-    if not Role.query.filter(Role.role_name == 'User').first():
+    if not Role.query.filter(Role.name == 'User').first():
         Role.add_new(role_name='User')
     admin_user = User.query.filter(User.username == 'Admin').first()
     if admin_user:
-        admin_role = Role.query.filter(Role.role_name == "Admin").first()
+        admin_role = Role.query.filter(Role.name == "Admin").first()
         role_user_admin = Role_User.query.filter((Role_User.user_id == admin_user.id) & (Role_User.role_id == admin_role.id)).first()
         if not role_user_admin:
             Role_User.add_new(role_id=admin_role.id, user_id=admin_user.id)

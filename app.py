@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
+from functools import wraps
 from book_cafe.db_models import db, Role, Role_User, User, Book, initialize_database
 
 
@@ -14,6 +15,17 @@ login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 toastr = Toastr(app)
+
+
+def role_required(required_role):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if not current_user.has_role(required_role):
+                return redirect(url_for("login"))
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
 
 
 @login_manager.user_loader
@@ -59,6 +71,7 @@ def home():
 
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
+@role_required("Admin")
 def add_book():
     if request.method == "POST":
         Book.add_new(
@@ -70,6 +83,16 @@ def add_book():
         flash("Book added to library.")
         return redirect(url_for("add_book"))
     return render_template("add_book.html")
+
+
+@app.route("/delete_book/<id>", methods=["GET", "POST"])
+@login_required
+@role_required("Admin")
+def delete_book(id):
+    Book.get_book_by_id(id).delete()
+    db.session.commit()
+    flash("Book deleted from library.")
+    return redirect(url_for("find_book"))
 
 
 @app.route("/find_book", methods=["GET", "POST"])
@@ -94,15 +117,6 @@ def query_books(author, title, sort_by):
     books = Book.get_books_by_author_title(author=author, title=title, sort_by=sort_by)
     books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]
     return books
-
-
-@app.route("/delete_book/<id>", methods=["GET", "POST"])
-@login_required
-def delete_book(id):
-    Book.get_book_by_id(id).delete()
-    db.session.commit()
-    flash("Book deleted from library.")
-    return redirect(url_for("find_book"))
 
 
 if __name__ == "__main__":
