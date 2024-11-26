@@ -69,16 +69,28 @@ def home():
     return render_template("home.html")
 
 
+ALLOWED_EXTENSIONS = ['png']
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
 @role_required("Admin")
 def add_book():
     if request.method == "POST":
+        binary_pic_data = None
+        if 'cover' in request.files:
+            cover_picture_file = request.files["cover"]
+            if cover_picture_file and allowed_file(cover_picture_file.filename):
+                binary_pic_data = cover_picture_file.read()
         Book.add_new(
             title=request.form.get("title"),
             author=request.form.get("author"),
             description=request.form.get("description"),
-            user_id=current_user.id)
+            user_id=current_user.id,
+            cover_picture=binary_pic_data)
         db.session.commit()
         flash("Book added to library.")
         return redirect(url_for("add_book"))

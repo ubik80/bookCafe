@@ -94,13 +94,14 @@ class Book(db.Model):
     title = db.Column(db.String(50), index=True, nullable=False)
     author = db.Column(db.String(50), index=True, nullable=False)
     description = db.Column(db.String(500), nullable=False)
+    cover_picture = db.Column(db.LargeBinary)
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     user_created = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     __table_args__ = (db.Index('title_author_index', 'title', 'author'),)
 
     @staticmethod
-    def add_new(title, author, description, user_id):
-        new_book = Book(title=title, author=author, description=description, user_created=user_id)
+    def add_new(title, author, description, user_id, cover_picture):
+        new_book = Book(title=title, author=author, description=description, user_created=user_id, cover_picture=cover_picture)
         db.session.add(new_book)
         return new_book
 
