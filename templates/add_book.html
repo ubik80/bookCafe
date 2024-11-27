@@ -10,26 +10,26 @@
 
         <h4>Add a book to the library</h4><br/>
 
-        <form action="#" method="post" enctype=multipart/form-data>
+        <form method="POST" action="{{ url_for('add_book') }}" enctype="multipart/form-data">
+            {{ form.csrf_token }}
             <div class="mb-3 mt-3">
-                <label for="title" class="form-label">Title:</label>
-                <input type="text" class="form-control" id="title" placeholder="Enter book title" name="title" required>
+                {{ form.title.label }}:<br/>
+                {{ form.title(class_="form-control") }}
             </div>
             <div class="mb-3 mt-3">
-                <label for="author" class="form-label">Author:</label>
-                <input type="text" class="form-control" id="author" placeholder="Enter author name" name="author" required>
+                {{ form.author.label }}:<br/>
+                {{ form.author(class_="form-control") }}
             </div>
             <div class="mb-3 mt-3">
-                <label for="description" class="form-label">Description:</label>
-                <textarea id="description" class="form-control" placeholder="Description" name="description" required></textarea>
+                {{ form.description.label }}:<br/>
+                {{ form.description(class_="form-control") }}
             </div>
             <div class="mb-3 mt-3">
-                <label for="cover" class="form-label">Cover:</label>
-                <input id="cover" class="form-control" type=file placeholder="Cover" name="cover">
+                {{ form.cover_picture.label }}:<br/>
+                {{ form.cover_picture(class_="form-control") }}
             </div>
-
             <div class="mb-3">
-                <button type="submit" class="btn btn-primary">Submit</button>
+                {{ form.submit(class_="btn btn-primary") }}
             </div>
         </form>
 

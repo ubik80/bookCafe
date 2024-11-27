@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from flask_toastr import Toastr
 from functools import wraps
 from book_cafe.db_models import db, Role, Role_User, User, Book
-
+from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///bookcafe"
@@ -35,41 +35,49 @@ def load_user(user_id):
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
+    form = Register_Form()
+    if form.validate_on_submit():
         user_role = Role.get_role("User")
-        new_user = User.add_new(username=request.form.get("username"), password=request.form.get("password"))
+        username = form.username.data
+        password = form.password.data
+        new_user = User.add_new(username=username, password=password)
         db.session.commit()
-        Role_User.add_new(role_id = user_role.id, user_id = new_user.id)
+        Role_User.add_new(role_id=user_role.id, user_id=new_user.id)
         db.session.commit()
+        flash("New account created.")
         return redirect(url_for("login"))
-    return render_template("sign_up.html")
+    return render_template("sign_up.html", form=form)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        user = User.get_user_by_name(username=request.form.get("username"))
-        if user and user.check_password(request.form.get("password")):
+    form = Login_Form()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        user = User.get_user_by_name(username=username)
+        if user and user.check_password(password):
             login_user(user)
             flash("You are logged in.")
-            return redirect(url_for("home"))
-    return render_template("login.html")
+            return redirect(url_for("find_book"))
+    return render_template("login.html", form = form)
 
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
+    session.clear()
     flash("You are logged out.")
-    return redirect(url_for("home"))
+    return redirect(url_for("login"))
 
 
 @app.route("/")
 def home():
-    return render_template("home.html")
+    return redirect(url_for("find_book"))
 
 
-ALLOWED_EXTENSIONS = ['png']
+ALLOWED_EXTENSIONS = ['png', 'jpg']
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -79,22 +87,23 @@ def allowed_file(filename):
 @login_required
 @role_required("Admin")
 def add_book():
-    if request.method == "POST":
+    form = Add_Book_Form()
+    if form.cover_picture.data and not allowed_file(form.cover_picture.data.filename):
+            flash("Wrong file format for cover picture")
+    if form.validate_on_submit():
         binary_pic_data = None
-        if 'cover' in request.files:
-            cover_picture_file = request.files["cover"]
-            if cover_picture_file and allowed_file(cover_picture_file.filename):
-                binary_pic_data = cover_picture_file.read()
+        if form.cover_picture.data:
+            binary_pic_data = form.cover_picture.data.read()
         Book.add_new(
-            title=request.form.get("title"),
-            author=request.form.get("author"),
-            description=request.form.get("description"),
+            title=form.title.data,
+            author=form.author.data,
+            description=form.description.data,
             user_id=current_user.id,
             cover_picture=binary_pic_data)
         db.session.commit()
         flash("Book added to library.")
         return redirect(url_for("add_book"))
-    return render_template("add_book.html")
+    return render_template("add_book.html", form=form)
 
 
 @app.route("/delete_book/<id>", methods=["GET", "POST"])
@@ -111,19 +120,20 @@ def delete_book(id):
 @app.route("/find_book", methods=["GET", "POST"])
 @login_required
 def find_book():
-    if request.method == "POST":
-        title = request.form.get("title")
-        author = request.form.get("author")
-        sort_by = request.form.get("sort_by")
+    form = Find_Book_Form()
+    if form.validate_on_submit():
+        title = form.title.data
+        author = form.author.data
+        sort_by = form.sort_by.data
         session['title'] = title or ""
         session['author'] = author or ""
         session['sort_by'] = sort_by or "title"
         return redirect(url_for("find_book"))
-    title = session.get("title") or ""
-    author = session.get("author") or ""
-    sort_by = session.get("sort_by") or "title"
-    books = query_books(author, title, sort_by)
-    return render_template("find_book.html", author=author, title=title, sort_by=sort_by, books=books)
+    form.title.data = session.get("title") or ""
+    form.author.data = session.get("author") or ""
+    form.sort_by.data = session.get("sort_by") or "title"
+    books = query_books(form.author.data, form.title.data, form.sort_by.data)
+    return render_template("find_book.html", books=books, form=form)
 
 
 def query_books(author, title, sort_by):

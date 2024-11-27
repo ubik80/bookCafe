@@ -9,31 +9,29 @@
     <div class="col-1"></div>
     <div class="col-4">
         <h4>Search in the library</h4><br/>
-        <form action="#" method="post">
-            <div class="mb-3 mt-3">
-                <label for="title" class="form-label">Title:</label>
-                <input type="text" class="form-control" id="title" placeholder="Enter book title" name="title"
-                       value="{{title}}">
-            </div>
-            <div class="mb-3 mt-3">
-                <label for="author" class="form-label">Author:</label>
-                <input type="text" class="form-control" id="author" placeholder="Enter author name" name="author"
-                       value="{{author}}">
-            </div>
 
-            <label class="form-label">Sort by: </label><br>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="title_radio" name="sort_by" value="title" {{"checked" if sort_by != "author" }}>title</input>
-                <label class="form-check-label" for="title_radio"></label>
+        <form method="POST" action="{{ url_for('find_book') }}">
+            {{ form.csrf_token }}
+            <div class="mb-3 mt-3">
+                {{ form.title.label }}:<br/>
+                {{ form.title(class_="form-control") }}
             </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="author_radio" name="sort_by" value="author" {{"checked" if sort_by == "author" }}>author</input>
-                <label class="form-check-label" for="author_radio"></label>
+            <div class="mb-3 mt-3">
+                {{ form.author.label }}:<br/>
+                {{ form.author(class_="form-control") }}
             </div>
-
+            <div class="mb-3 mt-3">
+                {{ form.sort_by.label }}:<br/>
+                {% for subfield in form.sort_by %}
+                <tr>
+                    <td>{{ subfield }}</td>
+                    <td>{{ subfield.label }}</td>
+                    &nbsp;&nbsp;&nbsp;
+                </tr>
+                {% endfor %}
+            </div>
             <div class="mb-3">
-                <br>
-                <button type="submit" class="btn btn-primary">Submit</button>
+                {{ form.submit(class_="btn btn-primary") }}
             </div>
         </form>
     </div>
