@@ -28,7 +28,9 @@ def role_required(required_role):
             if not current_user.has_role(required_role):
                 return redirect(url_for("login"))
             return f(*args, **kwargs)
+
         return wrapped
+
     return decorator
 
 
@@ -64,7 +66,7 @@ def login():
             login_user(user)
             flash("You are logged in.")
             return redirect(url_for("find_book"))
-    return render_template("login.html", form = form)
+    return render_template("login.html", form=form)
 
 
 @app.route("/logout")
@@ -83,6 +85,7 @@ def home():
 
 ALLOWED_EXTENSIONS = ['png', 'jpg']
 
+
 def allowed_filename(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -91,13 +94,12 @@ def allowed_filename(filename):
 @login_required
 @role_required("Admin")
 def add_book():
-    max_pic_size = 500*1024
     form = Add_Book_Form()
     if form.validate_on_submit():
         binary_pic_data = None
         if form.cover_picture.data:
             binary_pic_data = form.cover_picture.data.read()
-            if getsizeof(binary_pic_data) > max_pic_size:
+            if getsizeof(binary_pic_data) > 500 * 1024:
                 flash("Cover picture size is too large.")
                 return redirect(url_for("add_book"))
         Book.add_new(
@@ -156,7 +158,8 @@ def initialize_database():
     admin_user = User.query.filter(User.username == 'Admin').first()
     if admin_user:
         admin_role = Role.query.filter(Role.name == "Admin").first()
-        role_user_admin = Role_User.query.filter((Role_User.user_id == admin_user.id) & (Role_User.role_id == admin_role.id)).first()
+        role_user_admin = Role_User.query.filter(
+            (Role_User.user_id == admin_user.id) & (Role_User.role_id == admin_role.id)).first()
         if not role_user_admin:
             Role_User.add_new(role_id=admin_role.id, user_id=admin_user.id)
     db.session.commit()
