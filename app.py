@@ -3,6 +3,10 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_migrate import Migrate
 from flask_toastr import Toastr
 from functools import wraps
+from sys import getsizeof
+
+from sqlalchemy import false
+
 from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 
@@ -79,7 +83,7 @@ def home():
 
 ALLOWED_EXTENSIONS = ['png', 'jpg']
 
-def allowed_file(filename):
+def allowed_filename(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
@@ -87,13 +91,15 @@ def allowed_file(filename):
 @login_required
 @role_required("Admin")
 def add_book():
+    max_pic_size = 500*1024
     form = Add_Book_Form()
-    if form.cover_picture.data and not allowed_file(form.cover_picture.data.filename):
-            flash("Wrong file format for cover picture")
     if form.validate_on_submit():
         binary_pic_data = None
         if form.cover_picture.data:
             binary_pic_data = form.cover_picture.data.read()
+            if getsizeof(binary_pic_data) > max_pic_size:
+                flash("Cover picture size is too large.")
+                return redirect(url_for("add_book"))
         Book.add_new(
             title=form.title.data,
             author=form.author.data,
