@@ -31,7 +31,7 @@ class Add_Book_Form(FlaskForm):
     title = StringField('Title', validators=[InputRequired('title required')])
     author = StringField('Author', validators=[InputRequired('author required')])
     description = TextAreaField('Description')
-    cover_picture = FileField('Cover Picture', validators=[validate_cover_picture])
+    cover_picture = FileField('Cover Picture')
     submit = SubmitField('Submit')
 
 

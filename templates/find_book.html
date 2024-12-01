@@ -39,10 +39,11 @@
     <div class="col-1"></div>
 
     <div class="col col-5">
-        <div class="row overflow-scroll" style="height: 90vh">
+        <div class="row overflow-auto align-top" style="height: 90vh">
+            <span class="align-top">
 
             {% for book in books %}
-            <div class="card">
+            <div class="card" style="height: 170px">
                 <div class="card-header">{{book['title']}} &nbsp;&nbsp;&nbsp; by &nbsp;&nbsp;&nbsp;
                     {{book['author']}}
                 </div>
@@ -55,6 +56,7 @@
             </div>
             {% endfor %}
 
+            </span>
         </div>
     </div>
 
