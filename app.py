@@ -95,6 +95,10 @@ def allowed_filename(filename):
 def add_book():
     form = Add_Book_Form()
     if form.validate_on_submit():
+        existing_book = Book.get_books_by_author_title(form.author.data, form.title.data)
+        if existing_book:
+            flash("Book already in library.")
+            return render_template("add_book.html", form=form)
         binary_pic_data = None
         if form.cover_picture.data:
             binary_pic_data = form.cover_picture.data.read()

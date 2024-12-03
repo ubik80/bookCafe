@@ -111,7 +111,7 @@ class Book(db.Model):
         return book
 
     @staticmethod
-    def get_books_by_author_title(author, title, sort_by):
+    def get_books_by_author_title(author, title, sort_by='title'):
         if sort_by == "author":
             books = (Book.query.
                  filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
