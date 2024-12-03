@@ -4,9 +4,6 @@ from flask_migrate import Migrate
 from flask_toastr import Toastr
 from functools import wraps
 from sys import getsizeof
-
-from sqlalchemy import false
-
 from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 
@@ -28,9 +25,7 @@ def role_required(required_role):
             if not current_user.has_role(required_role):
                 return redirect(url_for("login"))
             return f(*args, **kwargs)
-
         return wrapped
-
     return decorator
 
 
@@ -43,9 +38,13 @@ def load_user(user_id):
 def register():
     form = Register_Form()
     if form.validate_on_submit():
-        user_role = Role.get_role("User")
         username = form.username.data
         password = form.password.data
+        existing_user = User.get_user_by_name(username)
+        if existing_user:
+            flash("Username already in use.")
+            return render_template("sign_up.html", form=form)
+        user_role = Role.get_role("User")
         new_user = User.add_new(username=username, password=password)
         db.session.commit()
         Role_User.add_new(role_id=user_role.id, user_id=new_user.id)
@@ -101,7 +100,7 @@ def add_book():
             binary_pic_data = form.cover_picture.data.read()
             if getsizeof(binary_pic_data) > 500 * 1024:
                 flash("Cover picture size is too large.")
-                return redirect(url_for("add_book"))
+                return render_template("add_book.html", form=form)
         Book.add_new(
             title=form.title.data,
             author=form.author.data,
