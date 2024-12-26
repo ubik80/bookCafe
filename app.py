@@ -6,9 +6,10 @@ from functools import wraps
 from sys import getsizeof
 from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
+from confidential import PASSWORD
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///bookcafe"
+app.config["SQLALCHEMY_DATABASE_URI"] = f'postgresql://bookcafe:{PASSWORD}@localhost:5432/bookcafe'
 app.config["SECRET_KEY"] = "abc"
 db.init_app(app)
 migrate = Migrate(app, db)

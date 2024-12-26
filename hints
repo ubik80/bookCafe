@@ -1,6 +1,14 @@
 flask run --debug
+
 flask db init
 flask db migrate -m "initial"
 flask db upgrade
+
 pipreqs .
 pip install -r requirements.txt
+
+sudo systemctl start postgresql.service
+sudo -i -u postgres
+createdb bookcafe
+
+dragonfruit123!
