@@ -173,3 +173,4 @@ migrations/
 .DS_Store/*
 .DS_Store/
 confidential.py
+application.log*
