@@ -38,7 +38,7 @@ class Add_Book_Form(FlaskForm):
 class Find_Book_Form(FlaskForm):
     title = StringField('Title')
     author = StringField('Author')
-    sort_by = RadioField('Sort by', choices=['title' ,'author'], default='title')
+    sort_by = RadioField('Sort by', choices=[('title' ,'title') ,('author', 'author')], default='title')
     submit = SubmitField('Submit')
 
 

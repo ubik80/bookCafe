@@ -37,7 +37,7 @@ def load_user(user_id: int) -> User:
 
 
 @app.route('/register', methods=["GET", "POST"])
-def register() -> Response:
+def register():
     form = Register_Form()
     if form.validate_on_submit():
         username = form.username.data
@@ -57,7 +57,7 @@ def register() -> Response:
 
 
 @app.route("/login", methods=["GET", "POST"])
-def login() -> Response:
+def login():
     form = Login_Form()
     if form.validate_on_submit():
         username = form.username.data
@@ -92,7 +92,7 @@ def allowed_filename(filename) -> bool:
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
 @role_required("Admin")
-def add_book() -> Response:
+def add_book():
     form = Add_Book_Form()
     if form.validate_on_submit():
         existing_book = Book.get_books_by_author_title(form.author.data, form.title.data)
@@ -130,7 +130,7 @@ def delete_book(id: int) -> Response:
 
 @app.route("/find_book", methods=["GET", "POST"])
 @login_required
-def find_book() -> Response:
+def find_book():
     form = Find_Book_Form()
     if form.validate_on_submit():
         title = form.title.data
