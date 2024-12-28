@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import UserMixin, RoleMixin
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -53,7 +53,6 @@ class User(UserMixin, db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     is_active = db.Column(db.Boolean, default = True, nullable=False)
     is_authenticated = db.Column(db.Boolean, default = True, nullable=False)
-    #is_anonymous = db.Column(db.Boolean, default = False, nullable=False)
     failed_login_attempts = db.Column(db.Integer, default = 0, nullable=False)
     last_failed_login_attempt = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     role_ids = relationship("Role_User", back_populates="user")
@@ -75,6 +74,14 @@ class User(UserMixin, db.Model):
         user = User.query.filter(User.id==user_id).first()
         return user
 
+    @staticmethod
+    def get_users_with_failed_logins_to_reset() -> list["User"]:
+        older_than = datetime.now()-timedelta(minutes=10)
+        users = (User.query
+                 .filter((User.failed_login_attempts > 0) & (User.last_failed_login_attempt < older_than))
+                 .all())
+        return users
+
     def set_password(self, p: str):
         self.password = generate_password_hash(p)
 
@@ -88,6 +95,15 @@ class User(UserMixin, db.Model):
         roles = [rid.role.name for rid in self.role_ids]
         if required_role in roles: return True
         return False
+
+    def reset_failed_login_attempts(self: "User"):
+        self.failed_login_attempts = 0
+
+
+class LoginAttempts(db.Model):
+    __tablename__ = 'login_attempts'
+    id = db.Column(db.Integer, primary_key=True)
+    failed_login_attempts = db.Column(db.Integer, default=0, nullable=False)
 
 
 class Book(db.Model):
@@ -115,15 +131,15 @@ class Book(db.Model):
     @staticmethod
     def get_books_by_author_title(author: str, title: str, sort_by: str ='title') -> list["Book"]:
         if sort_by == "author":
-            books = (Book.query.
-                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-                 .order_by(Book.author.asc())
-                 .all())
+            books = (Book.query
+                    .filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                    .order_by(Book.author.asc())
+                    .all())
         else:
-            books = (Book.query.
-                 filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-                 .order_by(Book.title.asc())
-                 .all())
+            books = (Book.query
+                    .filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                    .order_by(Book.title.asc())
+                    .all())
         return books
 
     def delete(self: "Book"):

@@ -7,9 +7,11 @@ from flask import Flask, render_template, Response, redirect, url_for, flash, se
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
 from functools import wraps
 from sys import getsizeof
-from book_cafe.db_models import db, Role, Role_User, User, Book
+from book_cafe.db_models import db, Role, Role_User, User, Book, LoginAttempts
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from datetime import datetime
 from confidential import PASSWORD
@@ -21,7 +23,8 @@ handler.setFormatter(formater)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = f'postgresql://bookcafe:{PASSWORD}@localhost:5432/bookcafe'
+connection_string = f'postgresql://bookcafe:{PASSWORD}@localhost:5432/bookcafe'
+app.config["SQLALCHEMY_DATABASE_URI"] = connection_string
 app.config["SECRET_KEY"] = "abc"
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -199,22 +202,25 @@ def initialize_database():
     db.session.commit()
 
 
-def cyclic_tasks():
-    logger.info(f"Cyclic tasks executed")
+def reset_failed_login_attempts(db_session):
+    users = User.get_users_with_failed_logins_to_reset()
+    for u in users: u.reset_failed_login_attempts()
+    db_session.commit()
 
 
-def cyclic_thread():
-    while True:
-        cyclic_tasks()
-        time.sleep(60)
+def cyclic_thread(db_session):
+    with app.app_context():
+        while True:
+            reset_failed_login_attempts(db_session)
+            time.sleep(60)
+            logger.info(f"Cyclic tasks executed")
 
 
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         initialize_database()
-    cyc = threading.Thread(target=cyclic_thread)
+    cyc = threading.Thread(target=cyclic_thread, args=[db.session,])
     cyc.start()
     app.run(debug=True)
-    cyc.join()
 
