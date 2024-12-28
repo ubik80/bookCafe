@@ -4,6 +4,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+from configuration import FAILED_LOGINS_WAIT_MINUTES
 
 
 class Base(DeclarativeBase):
@@ -76,7 +77,7 @@ class User(UserMixin, db.Model):
 
     @staticmethod
     def get_users_with_failed_logins_to_reset() -> list["User"]:
-        older_than = datetime.now()-timedelta(minutes=10)
+        older_than = datetime.now()-timedelta(minutes=FAILED_LOGINS_WAIT_MINUTES)
         users = (User.query
                  .filter((User.failed_login_attempts > 0) & (User.last_failed_login_attempt < older_than))
                  .all())

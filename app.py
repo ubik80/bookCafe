@@ -12,11 +12,12 @@ from sys import getsizeof
 from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from datetime import datetime
-from configuration import DB_CONNECTION_STRING
+from configuration import (DB_CONNECTION_STRING, CYCLIC_TASKS_FREQUENCY_SECONDS, ALLOWED_PICTURE_FILE_EXTENSIONS,
+                           MAX_FAILED_LOGIN_ATTEMPTS, LOGFILE_NAME, NUM_OF_LOGFILE_BACKUPS, LOGFILES_MAX_BYTES)
 from confidential import SECRET_KEY
 
 logger = logging.getLogger(__name__)
-handler = handlers.RotatingFileHandler(filename='application.log', maxBytes=1024*1024, backupCount=2)
+handler = handlers.RotatingFileHandler(filename=LOGFILE_NAME, maxBytes=LOGFILES_MAX_BYTES, backupCount=NUM_OF_LOGFILE_BACKUPS)
 formater = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s")
 handler.setFormatter(formater)
 logger.addHandler(handler)
@@ -79,7 +80,7 @@ def login():
         if not user:
             flash("Register first")
             return redirect(url_for("register"))
-        elif user.failed_login_attempts > 5:
+        elif user.failed_login_attempts > MAX_FAILED_LOGIN_ATTEMPTS :
             flash("Too many failed login attempts")
         elif user.check_password(password):
             login_user(user)
@@ -109,9 +110,8 @@ def home() -> Response:
     return redirect(url_for("find_book"))
 
 
-ALLOWED_EXTENSIONS = ['png', 'jpg']
 def allowed_filename(filename) -> bool:
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_PICTURE_FILE_EXTENSIONS
 
 
 @app.route("/add_book", methods=["GET", "POST"])
@@ -210,8 +210,8 @@ def cyclic_thread(db_session):
     with app.app_context():
         while True:
             reset_failed_login_attempts(db_session)
-            time.sleep(60)
-            logger.info(f"Cyclic tasks executed")
+            time.sleep(CYCLIC_TASKS_FREQUENCY_SECONDS)
+            #logger.info(f"Cyclic tasks executed")
 
 
 if __name__ == "__main__":

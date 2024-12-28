@@ -1,3 +1,10 @@
-from confidential import PASSWORD
+from confidential import DB_PASSWORD
 
-DB_CONNECTION_STRING = f'postgresql://bookcafe:{PASSWORD}@localhost:5432/bookcafe'
+DB_CONNECTION_STRING = f'postgresql://bookcafe:{DB_PASSWORD}@localhost:5432/bookcafe'
+CYCLIC_TASKS_FREQUENCY_SECONDS = 60
+ALLOWED_PICTURE_FILE_EXTENSIONS = ['png', 'jpg']
+MAX_FAILED_LOGIN_ATTEMPTS = 5
+FAILED_LOGINS_WAIT_MINUTES = 10
+LOGFILE_NAME = 'application.log'
+NUM_OF_LOGFILE_BACKUPS = 1
+LOGFILES_MAX_BYTES = 1024*1024

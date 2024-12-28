@@ -4,6 +4,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms import DecimalField, RadioField, SelectField, TextAreaField
 from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import InputRequired, ValidationError
+from configuration import ALLOWED_PICTURE_FILE_EXTENSIONS
 
 
 class Login_Form(FlaskForm):
@@ -22,8 +23,7 @@ class Add_Book_Form(FlaskForm):
     def validate_cover_picture(self, file):
         if not file or not file.data:
             return
-        ALLOWED_EXTENSIONS = ['png', 'jpg']
-        if not ('.' in file.data.filename and file.data.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS):
+        if not ('.' in file.data.filename and file.data.filename.rsplit('.', 1)[1].lower() in ALLOWED_PICTURE_FILE_EXTENSIONS):
             message = 'Wrong file format.'
             flash(message)
             raise ValidationError(message)
