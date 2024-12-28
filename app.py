@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from typing import Callable
+from flask import Flask, render_template, Response, redirect, url_for, flash, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
@@ -19,8 +20,8 @@ login_manager.init_app(app)
 toastr = Toastr(app)
 
 
-def role_required(required_role):
-    def decorator(f):
+def role_required(required_role: str) -> Callable:
+    def decorator(f: Callable):
         @wraps(f)
         def wrapped(*args, **kwargs):
             if not current_user.has_role(required_role):
@@ -31,12 +32,12 @@ def role_required(required_role):
 
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id: int) -> User:
     return User.get_user_by_id(user_id)
 
 
 @app.route('/register', methods=["GET", "POST"])
-def register():
+def register() -> Response:
     form = Register_Form()
     if form.validate_on_submit():
         username = form.username.data
@@ -56,7 +57,7 @@ def register():
 
 
 @app.route("/login", methods=["GET", "POST"])
-def login():
+def login() -> Response:
     form = Login_Form()
     if form.validate_on_submit():
         username = form.username.data
@@ -71,7 +72,7 @@ def login():
 
 @app.route("/logout")
 @login_required
-def logout():
+def logout() -> Response:
     logout_user()
     session.clear()
     flash("You are logged out.")
@@ -79,21 +80,19 @@ def logout():
 
 
 @app.route("/")
-def home():
+def home() -> Response:
     return redirect(url_for("find_book"))
 
 
 ALLOWED_EXTENSIONS = ['png', 'jpg']
-
-
-def allowed_filename(filename):
+def allowed_filename(filename) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
 @role_required("Admin")
-def add_book():
+def add_book() -> Response:
     form = Add_Book_Form()
     if form.validate_on_submit():
         existing_book = Book.get_books_by_author_title(form.author.data, form.title.data)
@@ -121,7 +120,7 @@ def add_book():
 @app.route("/delete_book/<id>", methods=["GET", "POST"])
 @login_required
 @role_required("Admin")
-def delete_book(id):
+def delete_book(id: int) -> Response:
     book = Book.get_book_by_id(id)
     book.delete()
     db.session.commit()
@@ -131,7 +130,7 @@ def delete_book(id):
 
 @app.route("/find_book", methods=["GET", "POST"])
 @login_required
-def find_book():
+def find_book() -> Response:
     form = Find_Book_Form()
     if form.validate_on_submit():
         title = form.title.data
@@ -148,7 +147,7 @@ def find_book():
     return render_template("find_book.html", books=books, form=form)
 
 
-def query_books(author, title, sort_by):
+def query_books(author: str, title: str, sort_by: str) -> list[dict]:
     books = Book.get_books_by_author_title(author=author, title=title, sort_by=sort_by)
     books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]
     return books

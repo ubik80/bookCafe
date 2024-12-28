@@ -22,7 +22,7 @@ class Role_User(db.Model):
     role = relationship("Role")
 
     @staticmethod
-    def add_new(role_id, user_id):
+    def add_new(role_id: int, user_id: int) -> "Role_User":
         new_role_user = Role_User(role_id = role_id, user_id = user_id)
         db.session.add(new_role_user)
         return new_role_user
@@ -34,13 +34,13 @@ class Role(db.Model, RoleMixin):
     name = db.Column(db.String(80), unique=True)
 
     @staticmethod
-    def add_new(role_name):
+    def add_new(role_name: str):
         new_role = Role(name=role_name)
         db.session.add(new_role)
         return new_role
 
     @staticmethod
-    def get_role(role_name):
+    def get_role(role_name: str) -> "Role":
         role = Role.query.filter(Role.name == role_name).first()
         return role
 
@@ -57,32 +57,32 @@ class User(UserMixin, db.Model):
     role_ids = relationship("Role_User", back_populates="user")
 
     @staticmethod
-    def add_new(username, password):
+    def add_new(username: str, password: str) -> "User":
         new_user = User(username=username)
         new_user.set_password(p=password)
         db.session.add(new_user)
         return new_user
 
     @staticmethod
-    def get_user_by_name(username):
+    def get_user_by_name(username: str) -> "User":
         user = User.query.filter(User.username==username).first()
         return user
 
     @staticmethod
-    def get_user_by_id(user_id):
+    def get_user_by_id(user_id: int) -> "User":
         user = User.query.filter(User.id==user_id).first()
         return user
 
-    def set_password(self, p):
+    def set_password(self, p: str):
         self.password = generate_password_hash(p)
 
-    def check_password(self, p):
+    def check_password(self, p: str) -> bool:
         return check_password_hash(self.password, p)
 
-    def get_id(self):
+    def get_id(self: "User") -> str:
         return str(self.id)
 
-    def has_role(self, required_role):
+    def has_role(self, required_role: "Role") -> bool:
         roles = [rid.role.name for rid in self.role_ids]
         if required_role in roles: return True
         return False
@@ -100,18 +100,18 @@ class Book(db.Model):
     __table_args__ = (db.Index('title_author_index', 'title', 'author'),)
 
     @staticmethod
-    def add_new(title, author, description, user_id, cover_picture):
+    def add_new(title: str, author: str, description: str, user_id: int, cover_picture: db.LargeBinary) -> "Book":
         new_book = Book(title=title, author=author, description=description, user_created=user_id, cover_picture=cover_picture)
         db.session.add(new_book)
         return new_book
 
     @staticmethod
-    def get_book_by_id(book_id):
+    def get_book_by_id(book_id: int) -> "Book":
         book=(Book.query.filter(Book.id==book_id)).one()
         return book
 
     @staticmethod
-    def get_books_by_author_title(author, title, sort_by='title'):
+    def get_books_by_author_title(author: str, title: str, sort_by: str ='title') -> list["Book"]:
         if sort_by == "author":
             books = (Book.query.
                  filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
@@ -124,7 +124,7 @@ class Book(db.Model):
                  .all())
         return books
 
-    def delete(self):
+    def delete(self: "Book"):
         db.session.delete(self)
 
 
