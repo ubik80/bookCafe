@@ -1,4 +1,6 @@
 import logging
+import time
+import threading
 from logging import handlers
 from typing import Callable
 from flask import Flask, render_template, Response, redirect, url_for, flash, session
@@ -9,10 +11,11 @@ from functools import wraps
 from sys import getsizeof
 from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
+from datetime import datetime
 from confidential import PASSWORD
 
 logger = logging.getLogger(__name__)
-handler = handlers.RotatingFileHandler(filename='application.log', maxBytes=1024, backupCount=2)
+handler = handlers.RotatingFileHandler(filename='application.log', maxBytes=1024*1024, backupCount=2)
 formater = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s")
 handler.setFormatter(formater)
 logger.addHandler(handler)
@@ -72,11 +75,21 @@ def login():
         username = form.username.data
         password = form.password.data
         user = User.get_user_by_name(username=username)
-        if user and user.check_password(password):
+        if not user:
+            flash("Register first")
+            return redirect(url_for("register"))
+        elif user.failed_login_attempts > 5:
+            flash("Too many failed login attempts")
+        elif user.check_password(password):
             login_user(user)
             flash("You are logged in.")
             logger.info(f"User {username} logged in.")
             return redirect(url_for("find_book"))
+        else:
+            user.failed_login_attempts += 1
+            user.last_failed_login_attempt = datetime.now()
+            db.session.commit()
+            logger.info(f"Unsuccessful login attempt for user {username}.")
     return render_template("login.html", form=form)
 
 
@@ -186,8 +199,22 @@ def initialize_database():
     db.session.commit()
 
 
+def cyclic_tasks():
+    logger.info(f"Cyclic tasks executed")
+
+
+def cyclic_thread():
+    while True:
+        cyclic_tasks()
+        time.sleep(60)
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         initialize_database()
+    cyc = threading.Thread(target=cyclic_thread)
+    cyc.start()
     app.run(debug=True)
+    cyc.join()
+
