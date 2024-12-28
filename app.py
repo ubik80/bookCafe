@@ -169,8 +169,10 @@ def query_books(author: str, title: str, sort_by: str) -> list[dict]:
 def initialize_database():
     if not Role.query.filter(Role.name == 'Admin').first():
         Role.add_new(role_name='Admin')
+        logger.info(f"Database initialized - Admin role created.")
     if not Role.query.filter(Role.name == 'User').first():
         Role.add_new(role_name='User')
+        logger.info(f"Database initialized - User role created.")
     admin_user = User.query.filter(User.username == 'Admin').first()
     if admin_user:
         admin_role = Role.query.filter(Role.name == "Admin").first()
@@ -178,8 +180,10 @@ def initialize_database():
             (Role_User.user_id == admin_user.id) & (Role_User.role_id == admin_role.id)).first()
         if not role_user_admin:
             Role_User.add_new(role_id=admin_role.id, user_id=admin_user.id)
+            logger.info(f"Database initialized - Admin role assigned to Admin.")
+    else:
+        logger.info(f"Database initialized - Create Admin user and restart!")
     db.session.commit()
-    logger.info(f"Database initialized.")
 
 
 if __name__ == "__main__":
