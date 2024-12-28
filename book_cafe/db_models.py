@@ -100,12 +100,6 @@ class User(UserMixin, db.Model):
         self.failed_login_attempts = 0
 
 
-class LoginAttempts(db.Model):
-    __tablename__ = 'login_attempts'
-    id = db.Column(db.Integer, primary_key=True)
-    failed_login_attempts = db.Column(db.Integer, default=0, nullable=False)
-
-
 class Book(db.Model):
     __tablename__ = 'book'
     id = db.Column(db.Integer, primary_key=True)

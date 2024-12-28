@@ -7,14 +7,13 @@ from flask import Flask, render_template, Response, redirect, url_for, flash, se
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
 from functools import wraps
 from sys import getsizeof
-from book_cafe.db_models import db, Role, Role_User, User, Book, LoginAttempts
+from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from datetime import datetime
-from confidential import PASSWORD
+from configuration import DB_CONNECTION_STRING
+from confidential import SECRET_KEY
 
 logger = logging.getLogger(__name__)
 handler = handlers.RotatingFileHandler(filename='application.log', maxBytes=1024*1024, backupCount=2)
@@ -23,9 +22,8 @@ handler.setFormatter(formater)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 app = Flask(__name__)
-connection_string = f'postgresql://bookcafe:{PASSWORD}@localhost:5432/bookcafe'
-app.config["SQLALCHEMY_DATABASE_URI"] = connection_string
-app.config["SECRET_KEY"] = "abc"
+app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONNECTION_STRING
+app.config["SECRET_KEY"] = SECRET_KEY
 db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager()
