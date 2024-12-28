@@ -110,7 +110,7 @@ def home() -> Response:
     return redirect(url_for("find_book"))
 
 
-def is_allowed_filename(filename) -> bool:
+def is_allowed_filename(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_PICTURE_FILE_EXTENSIONS
 
 
