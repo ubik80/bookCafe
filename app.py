@@ -1,3 +1,5 @@
+import logging
+from logging import handlers
 from typing import Callable
 from flask import Flask, render_template, Response, redirect, url_for, flash, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -9,6 +11,12 @@ from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from confidential import PASSWORD
 
+logger = logging.getLogger(__name__)
+handler = handlers.RotatingFileHandler(filename='application.log', maxBytes=1024, backupCount=2)
+formater = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s")
+handler.setFormatter(formater)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = f'postgresql://bookcafe:{PASSWORD}@localhost:5432/bookcafe'
 app.config["SECRET_KEY"] = "abc"
@@ -52,6 +60,7 @@ def register():
         Role_User.add_new(role_id=user_role.id, user_id=new_user.id)
         db.session.commit()
         flash("New account created.")
+        logger.info(f"Account for user {username} created.")
         return redirect(url_for("login"))
     return render_template("sign_up.html", form=form)
 
@@ -66,6 +75,7 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             flash("You are logged in.")
+            logger.info(f"User {username} logged in.")
             return redirect(url_for("find_book"))
     return render_template("login.html", form=form)
 
@@ -76,6 +86,7 @@ def logout() -> Response:
     logout_user()
     session.clear()
     flash("You are logged out.")
+    logger.info(f"User logged out.")
     return redirect(url_for("login"))
 
 
@@ -113,6 +124,7 @@ def add_book():
             cover_picture=binary_pic_data)
         db.session.commit()
         flash("Book added to library.")
+        logger.info(f"Book \'{form.title.data}\' added to library.")
         return redirect(url_for("add_book"))
     return render_template("add_book.html", form=form)
 
@@ -125,6 +137,7 @@ def delete_book(id: int) -> Response:
     book.delete()
     db.session.commit()
     flash("Book deleted from library.")
+    logger.info(f"Book \'{book.title}\' deleted.")
     return redirect(url_for("find_book"))
 
 
@@ -166,6 +179,7 @@ def initialize_database():
         if not role_user_admin:
             Role_User.add_new(role_id=admin_role.id, user_id=admin_user.id)
     db.session.commit()
+    logger.info(f"Database initialized.")
 
 
 if __name__ == "__main__":
