@@ -1,5 +1,7 @@
 from confidential import DB_PASSWORD
 
+DEBUG_MODE_ON = True
+
 DB_CONNECTION_STRING = f'postgresql://bookcafe:{DB_PASSWORD}@localhost:5432/bookcafe'
 CYCLIC_TASKS_FREQUENCY_SECONDS = 60
 ALLOWED_PICTURE_FILE_EXTENSIONS = ['png', 'jpg']

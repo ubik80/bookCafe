@@ -13,7 +13,8 @@ from book_cafe.db_models import db, Role, Role_User, User, Book
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from datetime import datetime
 from configuration import (DB_CONNECTION_STRING, CYCLIC_TASKS_FREQUENCY_SECONDS, ALLOWED_PICTURE_FILE_EXTENSIONS,
-                           MAX_FAILED_LOGIN_ATTEMPTS, LOGFILE_NAME, NUM_OF_LOGFILE_BACKUPS, LOGFILES_MAX_BYTES)
+                           MAX_FAILED_LOGIN_ATTEMPTS, LOGFILE_NAME, NUM_OF_LOGFILE_BACKUPS, LOGFILES_MAX_BYTES,
+                           DEBUG_MODE_ON)
 from confidential import SECRET_KEY
 
 logger = logging.getLogger(__name__)
@@ -220,5 +221,5 @@ if __name__ == "__main__":
         initialize_database()
     cyc = threading.Thread(target=cyclic_thread, args=[db.session,])
     cyc.start()
-    app.run(debug=True)
+    app.run(debug=DEBUG_MODE_ON)
 
