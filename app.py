@@ -31,8 +31,6 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
-login_manager.needs_refresh_message = 'Automatic logout after inactivity'
-login_manager.refresh_view = 'login'
 toastr = Toastr(app)
 
 
