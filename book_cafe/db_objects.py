@@ -56,10 +56,10 @@ class User(UserMixin, db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     is_active = db.Column(db.Boolean, default = True, nullable=False)
     is_authenticated = db.Column(db.Boolean, default = True, nullable=False)
-    is_logged_in = db.Column(db.Boolean, default=True, nullable=False)
-    failed_login_attempts = db.Column(db.Integer, default = 0, nullable=False)
-    last_failed_login_attempt = db.Column(db.DateTime, default=datetime.now(), nullable=False)
-    last_activity = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+    is_logged_in = db.Column(db.Boolean, default=True, index=True, nullable=False)
+    failed_login_attempts = db.Column(db.Integer, default = 0, index=True, nullable=False)
+    last_failed_login_attempt = db.Column(db.DateTime, default=datetime.now(), index=True, nullable=False)
+    last_activity = db.Column(db.DateTime, default=datetime.now(), index=True, nullable=False)
     role_ids = relationship("Role_User", back_populates="user")
 
     @staticmethod

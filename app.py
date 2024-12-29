@@ -22,6 +22,8 @@ from configuration import (DB_CONNECTION_STRING, CYCLIC_TASKS_FREQUENCY_SECONDS,
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONNECTION_STRING
 app.config["SECRET_KEY"] = SECRET_KEY
+db.init_app(app)
+migrate = Migrate(app, db)
 toastr = Toastr(app)
 
 
@@ -164,9 +166,7 @@ def cyclic_thread(db_session):
 
 if __name__ == "__main__":
     with app.app_context():
-        db.init_app(app)
         db.create_all()
-        migrate = Migrate(app, db)
         initialize_database()
         login_manager.init_app(app)
     cyc = threading.Thread(target=cyclic_thread, args=[db.session,])
