@@ -45,6 +45,15 @@ def role_required(required_role: str) -> Callable:
     return decorator
 
 
+def render_template_navbar(template: str, **context) -> str:
+    if not context: context = dict()
+    if current_user and hasattr(current_user, 'username'):
+        context['navbar_info'] = f'logged in as {current_user.username}'
+    else:
+        context['navbar_info'] = 'not logged in'
+    return render_template(template, **context)
+
+
 @login_manager.user_loader
 def load_user(user_id: int) -> User:
     return User.get_user_by_id(user_id)
@@ -59,7 +68,7 @@ def register():
         existing_user = User.get_user_by_name(username)
         if existing_user:
             flash("Username already in use.")
-            return render_template("sign_up.html", form=form)
+            return render_template_navbar("sign_up.html", form=form)
         user_role = Role.get_role("User")
         new_user = User.add_new(username=username, password=password)
         db.session.commit()
@@ -68,7 +77,7 @@ def register():
         flash("New account created.")
         logger.info(f"Account for user {username} created.")
         return redirect(url_for("login"))
-    return render_template("sign_up.html", form=form)
+    return render_template_navbar("sign_up.html", form=form)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -93,7 +102,7 @@ def login():
             user.last_failed_login_attempt = datetime.now()
             db.session.commit()
             logger.info(f"Unsuccessful login attempt for user {username}.")
-    return render_template("login.html", form=form)
+    return render_template_navbar("login.html", form=form)
 
 
 @app.route("/logout")
@@ -124,13 +133,13 @@ def add_book():
         existing_book = Book.get_books_by_author_title(form.author.data, form.title.data)
         if existing_book:
             flash("Book already in library.")
-            return render_template("add_book.html", form=form)
+            return render_template_navbar("add_book.html", form=form)
         binary_pic_data = None
         if form.cover_picture.data:
             binary_pic_data = form.cover_picture.data.read()
             if getsizeof(binary_pic_data) > 500 * 1024:
                 flash("Cover picture size is too large.")
-                return render_template("add_book.html", form=form)
+                return render_template_navbar("add_book.html", form=form)
         Book.add_new(
             title=form.title.data,
             author=form.author.data,
@@ -141,7 +150,7 @@ def add_book():
         flash("Book added to library.")
         logger.info(f"Book \'{form.title.data}\' added to library.")
         return redirect(url_for("add_book"))
-    return render_template("add_book.html", form=form)
+    return render_template_navbar("add_book.html", form=form)
 
 
 @app.route("/delete_book/<id>", methods=["GET", "POST"])
@@ -172,7 +181,7 @@ def find_book():
     form.author.data = session.get("author") or ""
     form.sort_by.data = session.get("sort_by") or "title"
     books = query_books(form.author.data, form.title.data, form.sort_by.data)
-    return render_template("find_book.html", books=books, form=form)
+    return render_template_navbar("find_book.html", books=books, form=form)
 
 
 def query_books(author: str, title: str, sort_by: str) -> list[dict]:
@@ -212,7 +221,6 @@ def cyclic_thread(db_session):
         while True:
             reset_failed_login_attempts(db_session)
             time.sleep(CYCLIC_TASKS_FREQUENCY_SECONDS)
-            #logger.info(f"Cyclic tasks executed")
 
 
 if __name__ == "__main__":
