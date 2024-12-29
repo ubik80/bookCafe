@@ -1,9 +1,11 @@
-from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timedelta
+
 from flask_security import UserMixin, RoleMixin
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
-from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+
 from configuration import FAILED_LOGINS_WAIT_MINUTES, AUTOMATIC_LOGOUT_INACTIVITY_MINUTES
 
 

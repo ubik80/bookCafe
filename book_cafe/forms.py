@@ -1,9 +1,10 @@
 from flask import flash
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms import DecimalField, RadioField, SelectField, TextAreaField
-from flask_wtf.file import FileField, FileAllowed
+from flask_wtf.file import FileField
+from wtforms import RadioField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, ValidationError
+
 from configuration import ALLOWED_PICTURE_FILE_EXTENSIONS
 
 
@@ -23,7 +24,8 @@ class Add_Book_Form(FlaskForm):
     def validate_cover_picture(self, file):
         if not file or not file.data:
             return
-        if not ('.' in file.data.filename and file.data.filename.rsplit('.', 1)[1].lower() in ALLOWED_PICTURE_FILE_EXTENSIONS):
+        if not ('.' in file.data.filename and file.data.filename.rsplit('.', 1)[1].lower()
+                in ALLOWED_PICTURE_FILE_EXTENSIONS):
             message = 'Wrong file format.'
             flash(message)
             raise ValidationError(message)
@@ -38,7 +40,7 @@ class Add_Book_Form(FlaskForm):
 class Find_Book_Form(FlaskForm):
     title = StringField('Title')
     author = StringField('Author')
-    sort_by = RadioField('Sort by', choices=[('title' ,'title') ,('author', 'author')], default='title')
+    sort_by = RadioField('Sort by', choices=[('title', 'title'), ('author', 'author')], default='title')
     submit = SubmitField('Submit')
 
 

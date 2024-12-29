@@ -1,76 +1,28 @@
-import logging
 import threading
 import time
-from logging import handlers
-from typing import Callable
-from flask import Flask, render_template, Response, redirect, url_for, flash, session
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from datetime import datetime
+from sys import getsizeof
+
+from flask import Flask, Response, redirect, url_for, flash, session
+from flask_login import login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
-from functools import wraps
-from sys import getsizeof
-from book_cafe.db_models import db, Role, Role_User, User, Book
-from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
-from datetime import datetime
-from configuration import (DB_CONNECTION_STRING, CYCLIC_TASKS_FREQUENCY_SECONDS, ALLOWED_PICTURE_FILE_EXTENSIONS,
-                           MAX_FAILED_LOGIN_ATTEMPTS, LOGFILE_NAME, NUM_OF_LOGFILE_BACKUPS, LOGFILES_MAX_BYTES,
-                           DEBUG_MODE_ON)
-from confidential import SECRET_KEY
 
-logger = logging.getLogger(__name__)
-handler = handlers.RotatingFileHandler(filename=LOGFILE_NAME, maxBytes=LOGFILES_MAX_BYTES, backupCount=NUM_OF_LOGFILE_BACKUPS)
-formater = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s")
-handler.setFormatter(formater)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+from book_cafe.db_functions import query_books, initialize_database
+from book_cafe.db_objects import Role, Role_User, User, Book, db
+from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
+from book_cafe.logging import logger
+from book_cafe.navbar import render_template_navbar
+from book_cafe.user_management import (role_required, refresh_user, reset_failed_login_attempts,
+                                       logout_inactive_users, login_manager)
+from confidential import SECRET_KEY
+from configuration import (DB_CONNECTION_STRING, CYCLIC_TASKS_FREQUENCY_SECONDS, MAX_FAILED_LOGIN_ATTEMPTS,
+                           DEBUG_MODE_ON)
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONNECTION_STRING
 app.config["SECRET_KEY"] = SECRET_KEY
-db.init_app(app)
-migrate = Migrate(app, db)
-login_manager = LoginManager()
-login_manager.login_view = "login"
-login_manager.init_app(app)
 toastr = Toastr(app)
-
-
-def role_required(required_role: str) -> Callable:
-    def decorator(f: Callable):
-        @wraps(f)
-        def wrapped(*args, **kwargs):
-            if not current_user.has_role(required_role):
-                return redirect(url_for("login"))
-            return f(*args, **kwargs)
-        return wrapped
-    return decorator
-
-
-def refresh_user() -> Callable:
-    def decorator(f: Callable):
-        @wraps(f)
-        def wrapped(*args, **kwargs):
-            if current_user and hasattr(current_user, 'username'):
-                current_user.last_activity = datetime.now()
-                db.session.commit()
-            return f(*args, **kwargs)
-        return wrapped
-    return decorator
-
-
-def render_template_navbar(template: str, **context) -> str:
-    if not context: context = dict()
-    if current_user and hasattr(current_user, 'username'):
-        context['navbar_info'] = f'logged in as {current_user.username}'
-    else:
-        context['navbar_info'] = 'not logged in'
-    return render_template(template, **context)
-
-
-@login_manager.user_loader
-def load_user(user_id: int) -> User or None:
-    ret = User.get_user_by_id(user_id)
-    if not ret.is_logged_in: return None
-    return ret
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -139,10 +91,6 @@ def home() -> Response:
     return redirect(url_for("find_book"))
 
 
-def is_allowed_filename(filename: str) -> bool:
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_PICTURE_FILE_EXTENSIONS
-
-
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
 @role_required("Admin")
@@ -206,46 +154,6 @@ def find_book():
     return render_template_navbar("find_book.html", books=books, form=form)
 
 
-def query_books(author: str, title: str, sort_by: str) -> list[dict]:
-    books = Book.get_books_by_author_title(author=author, title=title, sort_by=sort_by)
-    books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]
-    return books
-
-
-def initialize_database():
-    if not Role.query.filter(Role.name == 'Admin').first():
-        Role.add_new(role_name='Admin')
-        logger.info(f"Database initialized - Admin role created.")
-    if not Role.query.filter(Role.name == 'User').first():
-        Role.add_new(role_name='User')
-        logger.info(f"Database initialized - User role created.")
-    admin_user = User.query.filter(User.username == 'Admin').first()
-    if admin_user:
-        admin_role = Role.query.filter(Role.name == "Admin").first()
-        role_user_admin = Role_User.query.filter(
-            (Role_User.user_id == admin_user.id) & (Role_User.role_id == admin_role.id)).first()
-        if not role_user_admin:
-            Role_User.add_new(role_id=admin_role.id, user_id=admin_user.id)
-            logger.info(f"Database initialized - Admin role assigned to Admin.")
-    else:
-        logger.info(f"Database initialized - Create Admin user and restart!")
-    db.session.commit()
-
-
-def reset_failed_login_attempts(db_session):
-    users = User.get_users_with_failed_logins_to_reset()
-    for u in users: u.reset_failed_login_attempts()
-    db_session.commit()
-
-
-def logout_inactive_users(db_session):
-    users = User.get_inactive_users()
-    for u in users:
-        u.is_logged_in = False
-        logger.info(f"user {u.username} logged out because of inactivity.")
-    db_session.commit()
-
-
 def cyclic_thread(db_session):
     with app.app_context():
         while True:
@@ -256,8 +164,11 @@ def cyclic_thread(db_session):
 
 if __name__ == "__main__":
     with app.app_context():
+        db.init_app(app)
         db.create_all()
+        migrate = Migrate(app, db)
         initialize_database()
+        login_manager.init_app(app)
     cyc = threading.Thread(target=cyclic_thread, args=[db.session,])
     cyc.start()
     app.run(debug=DEBUG_MODE_ON)
