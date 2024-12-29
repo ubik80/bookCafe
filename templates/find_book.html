@@ -10,7 +10,7 @@
     <div class="col-4">
         <h4>Search in the library</h4><br/>
 
-        <form method="POST" action="{{ url_for('find_book') }}">
+        <form action="{{ url_for('find_book') }}" method="POST">
             {{ form.csrf_token }}
             <div class="mb-3 mt-3">
                 {{ form.title.label }}:<br/>
