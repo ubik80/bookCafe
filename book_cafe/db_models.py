@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-from configuration import FAILED_LOGINS_WAIT_MINUTES
+from configuration import FAILED_LOGINS_WAIT_MINUTES, AUTOMATIC_LOGOUT_INACTIVITY_MINUTES
 
 
 class Base(DeclarativeBase):
@@ -54,8 +54,10 @@ class User(UserMixin, db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     is_active = db.Column(db.Boolean, default = True, nullable=False)
     is_authenticated = db.Column(db.Boolean, default = True, nullable=False)
+    is_logged_in = db.Column(db.Boolean, default=True, nullable=False)
     failed_login_attempts = db.Column(db.Integer, default = 0, nullable=False)
     last_failed_login_attempt = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+    last_activity = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     role_ids = relationship("Role_User", back_populates="user")
 
     @staticmethod
@@ -80,6 +82,14 @@ class User(UserMixin, db.Model):
         older_than = datetime.now()-timedelta(minutes=FAILED_LOGINS_WAIT_MINUTES)
         users = (User.query
                  .filter((User.failed_login_attempts > 0) & (User.last_failed_login_attempt < older_than))
+                 .all())
+        return users
+
+    @staticmethod
+    def get_inactive_users() -> list["User"]:
+        inactive_threshold = datetime.now() - timedelta(minutes=AUTOMATIC_LOGOUT_INACTIVITY_MINUTES)
+        users = (User.query
+                 .filter(User.is_logged_in & (User.last_activity < inactive_threshold))
                  .all())
         return users
 

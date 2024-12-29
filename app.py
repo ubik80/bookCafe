@@ -1,6 +1,6 @@
 import logging
-import time
 import threading
+import time
 from logging import handlers
 from typing import Callable
 from flask import Flask, render_template, Response, redirect, url_for, flash, session
@@ -31,6 +31,8 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
+login_manager.needs_refresh_message = 'Automatic logout after inactivity'
+login_manager.refresh_view = 'login'
 toastr = Toastr(app)
 
 
@@ -40,6 +42,18 @@ def role_required(required_role: str) -> Callable:
         def wrapped(*args, **kwargs):
             if not current_user.has_role(required_role):
                 return redirect(url_for("login"))
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
+
+def refresh_user() -> Callable:
+    def decorator(f: Callable):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if current_user and hasattr(current_user, 'username'):
+                current_user.last_activity = datetime.now()
+                db.session.commit()
             return f(*args, **kwargs)
         return wrapped
     return decorator
@@ -55,8 +69,10 @@ def render_template_navbar(template: str, **context) -> str:
 
 
 @login_manager.user_loader
-def load_user(user_id: int) -> User:
-    return User.get_user_by_id(user_id)
+def load_user(user_id: int) -> User or None:
+    ret = User.get_user_by_id(user_id)
+    if not ret.is_logged_in: return None
+    return ret
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -94,6 +110,8 @@ def login():
             flash("Too many failed login attempts")
         elif user.check_password(password):
             login_user(user)
+            user.is_logged_in = True
+            db.session.commit()
             flash("You are logged in.")
             logger.info(f"User {username} logged in.")
             return redirect(url_for("find_book"))
@@ -108,6 +126,8 @@ def login():
 @app.route("/logout")
 @login_required
 def logout() -> Response:
+    current_user.is_logged_in = False
+    db.session.commit()
     logout_user()
     session.clear()
     flash("You are logged out.")
@@ -116,6 +136,7 @@ def logout() -> Response:
 
 
 @app.route("/")
+@refresh_user()
 def home() -> Response:
     return redirect(url_for("find_book"))
 
@@ -127,6 +148,7 @@ def is_allowed_filename(filename: str) -> bool:
 @app.route("/add_book", methods=["GET", "POST"])
 @login_required
 @role_required("Admin")
+@refresh_user()
 def add_book():
     form = Add_Book_Form()
     if form.validate_on_submit():
@@ -156,6 +178,7 @@ def add_book():
 @app.route("/delete_book/<id>", methods=["GET", "POST"])
 @login_required
 @role_required("Admin")
+@refresh_user()
 def delete_book(id: int) -> Response:
     book = Book.get_book_by_id(id)
     book.delete()
@@ -167,6 +190,7 @@ def delete_book(id: int) -> Response:
 
 @app.route("/find_book", methods=["GET", "POST"])
 @login_required
+@refresh_user()
 def find_book():
     form = Find_Book_Form()
     if form.validate_on_submit():
@@ -216,10 +240,19 @@ def reset_failed_login_attempts(db_session):
     db_session.commit()
 
 
+def logout_inactive_users(db_session):
+    users = User.get_inactive_users()
+    for u in users:
+        u.is_logged_in = False
+        logger.info(f"user {u.username} logged out because of inactivity.")
+    db_session.commit()
+
+
 def cyclic_thread(db_session):
     with app.app_context():
         while True:
             reset_failed_login_attempts(db_session)
+            logout_inactive_users(db_session)
             time.sleep(CYCLIC_TASKS_FREQUENCY_SECONDS)
 
 
