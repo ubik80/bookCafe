@@ -26,7 +26,7 @@ class Role_User(db.Model):
 
     @staticmethod
     def add_new(role_id: int, user_id: int) -> "Role_User":
-        new_role_user = Role_User(role_id = role_id, user_id = user_id)
+        new_role_user = Role_User(role_id=role_id, user_id=user_id)
         db.session.add(new_role_user)
         return new_role_user
 
@@ -54,10 +54,10 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(12), unique=True, index=True, nullable=False)
     password = db.Column(db.String(164), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now(), nullable=False)
-    is_active = db.Column(db.Boolean, default = True, nullable=False)
-    is_authenticated = db.Column(db.Boolean, default = True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_authenticated = db.Column(db.Boolean, default=True, nullable=False)
     is_logged_in = db.Column(db.Boolean, default=True, index=True, nullable=False)
-    failed_login_attempts = db.Column(db.Integer, default = 0, index=True, nullable=False)
+    failed_login_attempts = db.Column(db.Integer, default=0, index=True, nullable=False)
     last_failed_login_attempt = db.Column(db.DateTime, default=datetime.now(), index=True, nullable=False)
     last_activity = db.Column(db.DateTime, default=datetime.now(), index=True, nullable=False)
     role_ids = relationship("Role_User", back_populates="user")
@@ -71,17 +71,17 @@ class User(UserMixin, db.Model):
 
     @staticmethod
     def get_user_by_name(username: str) -> "User":
-        user = User.query.filter(User.username==username).first()
+        user = User.query.filter(User.username == username).first()
         return user
 
     @staticmethod
     def get_user_by_id(user_id: int) -> "User":
-        user = User.query.filter(User.id==user_id).first()
+        user = User.query.filter(User.id == user_id).first()
         return user
 
     @staticmethod
     def get_users_with_failed_logins_to_reset() -> list["User"]:
-        older_than = datetime.now()-timedelta(minutes=FAILED_LOGINS_WAIT_MINUTES)
+        older_than = datetime.now() - timedelta(minutes=FAILED_LOGINS_WAIT_MINUTES)
         users = (User.query
                  .filter((User.failed_login_attempts > 0) & (User.last_failed_login_attempt < older_than))
                  .all())
@@ -126,27 +126,28 @@ class Book(db.Model):
 
     @staticmethod
     def add_new(title: str, author: str, description: str, user_id: int, cover_picture: db.LargeBinary) -> "Book":
-        new_book = Book(title=title, author=author, description=description, user_created=user_id, cover_picture=cover_picture)
+        new_book = Book(title=title, author=author, description=description, user_created=user_id,
+                        cover_picture=cover_picture)
         db.session.add(new_book)
         return new_book
 
     @staticmethod
     def get_book_by_id(book_id: int) -> "Book":
-        book=(Book.query.filter(Book.id==book_id)).one()
+        book = (Book.query.filter(Book.id == book_id)).one()
         return book
 
     @staticmethod
-    def get_books_by_author_title(author: str, title: str, sort_by: str ='title') -> list["Book"]:
+    def get_books_by_author_title(author: str, title: str, sort_by: str = 'title') -> list["Book"]:
         if sort_by == "author":
             books = (Book.query
-                    .filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-                    .order_by(Book.author.asc())
-                    .all())
+                     .filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                     .order_by(Book.author.asc())
+                     .all())
         else:
             books = (Book.query
-                    .filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
-                    .order_by(Book.title.asc())
-                    .all())
+                     .filter(Book.title.like(f'%{title}%') & Book.author.like(f'%{author}%'))
+                     .order_by(Book.title.asc())
+                     .all())
         return books
 
     def delete(self: "Book"):

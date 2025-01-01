@@ -1,5 +1,3 @@
-import threading
-import time
 from datetime import datetime
 from sys import getsizeof
 
@@ -13,11 +11,9 @@ from book_cafe.db_objects import Role, Role_User, User, Book, db
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from book_cafe.logging import logger
 from book_cafe.navbar import render_template_navbar
-from book_cafe.user_management import (role_required, refresh_user, reset_failed_login_attempts,
-                                       logout_inactive_users, login_manager)
+from book_cafe.user_management import role_required, refresh_user, login_manager
 from confidential import SECRET_KEY
-from configuration import (DB_CONNECTION_STRING, CYCLIC_TASKS_FREQUENCY_SECONDS, MAX_FAILED_LOGIN_ATTEMPTS,
-                           DEBUG_MODE_ON)
+from configuration import DB_CONNECTION_STRING, MAX_FAILED_LOGIN_ATTEMPTS, DEBUG_MODE_ON
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONNECTION_STRING
@@ -58,7 +54,7 @@ def login():
         if not user:
             flash("Register first")
             return redirect(url_for("register"))
-        elif user.failed_login_attempts > MAX_FAILED_LOGIN_ATTEMPTS :
+        elif user.failed_login_attempts > MAX_FAILED_LOGIN_ATTEMPTS:
             flash("Too many failed login attempts")
         elif user.check_password(password):
             login_user(user)
@@ -156,20 +152,10 @@ def find_book():
     return render_template_navbar("find_book.html", books=books, form=form)
 
 
-def cyclic_thread(db_session):
-    with app.app_context():
-        while True:
-            reset_failed_login_attempts(db_session)
-            logout_inactive_users(db_session)
-            time.sleep(CYCLIC_TASKS_FREQUENCY_SECONDS)
-
-
 if __name__ == "__main__":
+    logger.info(f"-------- app started --------")
     with app.app_context():
         db.create_all()
         initialize_database()
         login_manager.init_app(app)
-    cyc = threading.Thread(target=cyclic_thread, args=[db.session,])
-    cyc.start()
-    app.run(debug=DEBUG_MODE_ON)
-
+    app.run(debug=DEBUG_MODE_ON, host='192.168.1.37')
