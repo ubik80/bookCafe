@@ -16,10 +16,13 @@ db.init_app(app)
 
 
 if __name__ == "__main__":
-    logger.info(f"-------- background started --------")
+    message = "-------- background started --------"
+    logger.info(message)
     while True:
         with app.app_context():
             reset_failed_login_attempts(db.session)
             logout_inactive_users(db.session)
-        if DEBUG_MODE_ON: logger.info(f"Cyclic tasks executed")
+        if DEBUG_MODE_ON:
+            message = "Cyclic tasks executed"
+            logger.info(message)
         time.sleep(CYCLIC_TASKS_FREQUENCY_SECONDS)

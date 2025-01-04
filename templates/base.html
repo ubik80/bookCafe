@@ -38,9 +38,17 @@
         </ul>
         <ul class="navbar-nav ml-auto">
             <li class="nav-item"><a class="nav-link">{{ navbar_info }}</a></li>
+            <li class="nav-item"><a class="nav-link" id="navbar_stream"></a></li>
         </ul>
     </div>
 </nav>
+
+<script>
+    var source = new EventSource('/navbar_stream');
+    source.onmessage = function(event) {
+        document.getElementById("navbar_stream").innerHTML = event.data;
+        }
+</script>
 
 {% block content %}{% endblock %}
 

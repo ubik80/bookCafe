@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from sys import getsizeof
 
@@ -5,6 +6,7 @@ from flask import Flask, Response, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
+from flask_cors import cross_origin
 
 from book_cafe.db_functions import query_books, initialize_database
 from book_cafe.db_objects import Role, Role_User, User, Book, db
@@ -152,10 +154,20 @@ def find_book():
     return render_template_navbar("find_book.html", books=books, form=form)
 
 
+@app.route('/navbar_stream')
+@cross_origin()
+def stream():
+    def event_stream():
+        while True:
+            yield "data:" + f"{datetime.now()}" + "\n\n"
+            time.sleep(5)
+    return Response(event_stream(), mimetype='text/event-stream')
+
+
 if __name__ == "__main__":
     logger.info(f"-------- app started --------")
     with app.app_context():
         db.create_all()
         initialize_database()
         login_manager.init_app(app)
-    app.run(debug=DEBUG_MODE_ON, host='192.168.1.37')
+    app.run(debug=DEBUG_MODE_ON, host='192.168.1.37', threaded=True)
