@@ -12,6 +12,7 @@ from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_
 from book_cafe.logging import logger
 from book_cafe.navbar import render_template_navbar, navbar_stream
 from book_cafe.user_management import role_required, refresh_user, login_manager
+from book_cafe.reddis import redis_client
 from confidential import SECRET_KEY
 from configuration import DB_CONNECTION_STRING, MAX_FAILED_LOGIN_ATTEMPTS, DEBUG_MODE_ON
 
@@ -20,7 +21,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONNECTION_STRING
 app.config["SECRET_KEY"] = SECRET_KEY
 db.init_app(app)
 migrate = Migrate(app, db)
+redis_client.init_app(app)
 toastr = Toastr(app)
+
 
 app.register_blueprint(navbar_stream)
 
@@ -64,6 +67,7 @@ def login():
             db.session.commit()
             flash("You are logged in.")
             logger.info(f"User {username} logged in.")
+            redis_client.set('navbar_news', f'{username} logged in.')
             return redirect(url_for("find_book"))
         else:
             user.failed_login_attempts += 1
@@ -76,12 +80,13 @@ def login():
 @app.route("/logout")
 @login_required
 def logout() -> Response:
+    logger.info(f'{current_user.username} logged out.')
+    redis_client.set('navbar_news', f'{current_user.username} logged out.')
     current_user.is_logged_in = False
     db.session.commit()
     logout_user()
     session.clear()
     flash("You are logged out.")
-    logger.info(f"User logged out.")
     return redirect(url_for("login"))
 
 
