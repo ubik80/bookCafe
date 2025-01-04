@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from sys import getsizeof
 
@@ -6,13 +5,12 @@ from flask import Flask, Response, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 from flask_toastr import Toastr
-from flask_cors import cross_origin
 
 from book_cafe.db_functions import query_books, initialize_database
 from book_cafe.db_objects import Role, Role_User, User, Book, db
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from book_cafe.logging import logger
-from book_cafe.navbar import render_template_navbar
+from book_cafe.navbar import render_template_navbar, navbar_stream
 from book_cafe.user_management import role_required, refresh_user, login_manager
 from confidential import SECRET_KEY
 from configuration import DB_CONNECTION_STRING, MAX_FAILED_LOGIN_ATTEMPTS, DEBUG_MODE_ON
@@ -23,6 +21,8 @@ app.config["SECRET_KEY"] = SECRET_KEY
 db.init_app(app)
 migrate = Migrate(app, db)
 toastr = Toastr(app)
+
+app.register_blueprint(navbar_stream)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -152,16 +152,6 @@ def find_book():
     form.sort_by.data = session.get("sort_by") or "title"
     books = query_books(form.author.data, form.title.data, form.sort_by.data)
     return render_template_navbar("find_book.html", books=books, form=form)
-
-
-@app.route('/navbar_stream')
-@cross_origin()
-def stream():
-    def event_stream():
-        while True:
-            yield "data:" + f"{datetime.now()}" + "\n\n"
-            time.sleep(5)
-    return Response(event_stream(), mimetype='text/event-stream')
 
 
 if __name__ == "__main__":
