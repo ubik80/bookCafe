@@ -2,7 +2,9 @@ from confidential import DB_PASSWORD
 
 DEBUG_MODE_ON = True
 
+HOST_IP = '192.168.1.37'
 DB_CONNECTION_STRING = f'postgresql://bookcafe:{DB_PASSWORD}@localhost:5432/bookcafe'
+REDIS_CONNECTION_STRING = 'redis://localhost:6379'
 CYCLIC_TASKS_FREQUENCY_SECONDS = 60
 ALLOWED_PICTURE_FILE_EXTENSIONS = ['png', 'jpg']
 MAX_FAILED_LOGIN_ATTEMPTS = 5

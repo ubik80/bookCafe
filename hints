@@ -11,3 +11,5 @@ sudo systemctl start postgresql.service
 sudo -i -u postgres
 createdb bookcafe
 
+redis-server
+

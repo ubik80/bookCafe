@@ -10,11 +10,11 @@ from book_cafe.db_functions import query_books, initialize_database
 from book_cafe.db_objects import Role, Role_User, User, Book, db
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from book_cafe.logging import logger
-from book_cafe.navbar import render_template_navbar, navbar_stream
-from book_cafe.user_management import role_required, refresh_user, login_manager
+from book_cafe.navbar import render_template_navbar, navbar_news_stream, set_navbar_news
 from book_cafe.reddis import redis_client
+from book_cafe.user_management import role_required, refresh_user, login_manager
 from confidential import SECRET_KEY
-from configuration import DB_CONNECTION_STRING, MAX_FAILED_LOGIN_ATTEMPTS, DEBUG_MODE_ON
+from configuration import DB_CONNECTION_STRING, MAX_FAILED_LOGIN_ATTEMPTS, DEBUG_MODE_ON, HOST_IP
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONNECTION_STRING
@@ -25,7 +25,7 @@ redis_client.init_app(app)
 toastr = Toastr(app)
 
 
-app.register_blueprint(navbar_stream)
+app.register_blueprint(navbar_news_stream)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -67,7 +67,7 @@ def login():
             db.session.commit()
             flash("You are logged in.")
             logger.info(f"User {username} logged in.")
-            redis_client.set('navbar_news', f'{username} logged in.')
+            set_navbar_news(f'{username} logged in.')
             return redirect(url_for("find_book"))
         else:
             user.failed_login_attempts += 1
@@ -81,7 +81,7 @@ def login():
 @login_required
 def logout() -> Response:
     logger.info(f'{current_user.username} logged out.')
-    redis_client.set('navbar_news', f'{current_user.username} logged out.')
+    set_navbar_news(f'{current_user.username} logged out.')
     current_user.is_logged_in = False
     db.session.commit()
     logout_user()
@@ -165,4 +165,4 @@ if __name__ == "__main__":
         db.create_all()
         initialize_database()
         login_manager.init_app(app)
-    app.run(debug=DEBUG_MODE_ON, host='192.168.1.37', threaded=True)
+    app.run(debug=DEBUG_MODE_ON, host=HOST_IP, threaded=True)

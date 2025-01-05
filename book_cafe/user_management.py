@@ -6,7 +6,6 @@ from flask import redirect, url_for
 from flask_login import current_user, LoginManager
 
 from book_cafe.db_objects import db, User
-from book_cafe.logging import logger
 
 login_manager = LoginManager()
 login_manager.login_view = "login"
@@ -40,20 +39,6 @@ def refresh_user() -> Callable:
             return f(*args, **kwargs)
         return wrapped
     return decorator
-
-
-def reset_failed_login_attempts(db_session):
-    users = User.get_users_with_failed_logins_to_reset()
-    for u in users: u.reset_failed_login_attempts()
-    db_session.commit()
-
-
-def logout_inactive_users(db_session):
-    users = User.get_inactive_users()
-    for u in users:
-        u.is_logged_in = False
-        logger.info(f"user {u.username} logged out because of inactivity.")
-    db_session.commit()
 
 
 if __name__ == "__main__":
