@@ -8,12 +8,13 @@ from flask_toastr import Toastr
 
 from book_cafe.db_functions import query_books, initialize_database
 from book_cafe.db_objects import Role, Role_User, User, Book, db
+from book_cafe.email_functions import send_email
 from book_cafe.forms import Login_Form, Register_Form, Add_Book_Form, Find_Book_Form
 from book_cafe.logging import logger
 from book_cafe.navbar import render_template_navbar, navbar_news_stream, set_navbar_news
 from book_cafe.reddis import redis_client
 from book_cafe.user_management import role_required, refresh_user, login_manager
-from confidential import SECRET_KEY
+from confidential import SECRET_KEY, EMAIL_ADDRESS_ADMIN
 from configuration import DB_CONNECTION_STRING, MAX_FAILED_LOGIN_ATTEMPTS, DEBUG_MODE_ON, HOST_IP
 
 app = Flask(__name__)
@@ -23,7 +24,6 @@ db.init_app(app)
 migrate = Migrate(app, db)
 redis_client.init_app(app)
 toastr = Toastr(app)
-
 
 app.register_blueprint(navbar_news_stream)
 
@@ -45,6 +45,7 @@ def register():
         db.session.commit()
         flash("New account created.")
         logger.info(f"Account for user {username} created.")
+        send_email('new registration', f'{username} just registered.', [EMAIL_ADDRESS_ADMIN, ])
         return redirect(url_for("login"))
     return render_template_navbar("sign_up.html", form=form)
 
