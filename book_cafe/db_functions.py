@@ -1,7 +1,9 @@
+from book_cafe.app_logger import logger
 from book_cafe.db_objects import User, Book, Role, Role_User, db
-from book_cafe.logging import logger
+from book_cafe.exceptions import sql_alchemy_exception
 
 
+@sql_alchemy_exception()
 def initialize_database():
     if not Role.query.filter(Role.name == 'Admin').first():
         Role.add_new(role_name='Admin')
@@ -22,6 +24,7 @@ def initialize_database():
     db.session.commit()
 
 
+@sql_alchemy_exception()
 def query_books(author: str, title: str, sort_by: str) -> list[dict]:
     books = Book.get_books_by_author_title(author=author, title=title, sort_by=sort_by)
     books = [{'title': b.title, 'author': b.author, 'description': b.description[:100], 'book_id': b.id} for b in books]

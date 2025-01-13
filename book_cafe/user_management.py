@@ -6,18 +6,21 @@ from flask import redirect, url_for
 from flask_login import current_user, LoginManager
 
 from book_cafe.db_objects import db, User
+from book_cafe.exceptions import sql_alchemy_exception
 
 login_manager = LoginManager()
 login_manager.login_view = "login"
 
 
 @login_manager.user_loader
+@sql_alchemy_exception()
 def load_user(user_id: int) -> User or None:
     ret = User.get_user_by_id(user_id)
     if not ret.is_logged_in: return None
     return ret
 
 
+@sql_alchemy_exception()
 def role_required(required_role: str) -> Callable:
     def decorator(f: Callable):
         @wraps(f)
@@ -29,6 +32,7 @@ def role_required(required_role: str) -> Callable:
     return decorator
 
 
+@sql_alchemy_exception()
 def refresh_user() -> Callable:
     def decorator(f: Callable):
         @wraps(f)

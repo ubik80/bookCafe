@@ -4,10 +4,12 @@ from datetime import datetime
 from flask import render_template, Blueprint, Response
 from flask_login import current_user
 
-from book_cafe.reddis import redis_client
+from book_cafe.exceptions import reddis_exception
+from book_cafe.redis import redis_client
 from constants import REDIS_KEY_NAVBAR_NEWS, REDIS_KEY_NAVBAR_NEWS_DATE
 
 
+@reddis_exception()
 def render_template_navbar(template: str, **context) -> str:
     if not context: context = dict()
     if current_user and hasattr(current_user, 'username'):
@@ -21,6 +23,7 @@ navbar_news_stream = Blueprint('navbar_stream', __name__, template_folder='templ
 
 
 @navbar_news_stream.route('/navbar_stream')
+@reddis_exception()
 def stream_navbar_news():
     def event_stream():
         monkeys = ['🍅', '🥦']
@@ -33,6 +36,7 @@ def stream_navbar_news():
     return Response(event_stream(), mimetype='text/event-stream')
 
 
+@reddis_exception()
 def set_navbar_news(news):
     redis_client.set(REDIS_KEY_NAVBAR_NEWS, news)
     redis_client.set(REDIS_KEY_NAVBAR_NEWS_DATE, str(datetime.now()))

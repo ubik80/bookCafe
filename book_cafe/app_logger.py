@@ -1,5 +1,7 @@
 import logging
-from logging import handlers
+from logging import handlers, Logger
+
+from injector import Module, provider, singleton
 
 from configuration import LOGFILE_NAME, LOGFILES_MAX_BYTES, NUM_OF_LOGFILE_BACKUPS
 
@@ -10,6 +12,13 @@ formater = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(filenam
 handler.setFormatter(formater)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
+
+
+class LoggerModule(Module):
+    @singleton
+    @provider
+    def provide_Logger(self) -> Logger:
+        return logger
 
 
 if __name__ == "__main__":

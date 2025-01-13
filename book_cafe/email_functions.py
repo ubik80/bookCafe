@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 
-from book_cafe.logging import logger
+from book_cafe.app_logger import logger
 from confidential import EMAIL_PASSWORD, EMAIL_SENDER
 from configuration import MAIL_SERVER_URL, MAIL_SERVER_PORT
 
